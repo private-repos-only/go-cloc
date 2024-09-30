@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# clean build directory
+rm -rf builds/
+
 # Set the output directory and binary name
 OUTPUT_DIR="builds"
 BINARY_NAME="go-cloc" # Change this to your program's name
@@ -19,7 +22,7 @@ platforms=(
 # Build for each platform and create a zip for each
 for platform in "${!platforms[@]}"; do
     IFS="/" read -r os arch <<< "$platform"
-    output_file="$OUTPUT_DIR/$BINARY_NAME-${platforms[$platform]}"
+    output_file="$OUTPUT_DIR/$BINARY_NAME"
     
     echo "Building for $os/$arch..."
     GOOS=$os GOARCH=$arch go build -o "$output_file" main.go
