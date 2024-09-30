@@ -181,7 +181,7 @@ func main() {
 		// combine csv reports
 		logger.Debug("Combining results...")
 		repoResults := report.ParseTotalsFromCSVs(csvFilePaths)
-		combinedReportsCSVFilePath := "AAA_combined_results.csv"
+		combinedReportsCSVFilePath := filepath.Join(timeDir, "AAA_combined_results.csv")
 		totalLoc = report.OutputCombinedCSV(repoResults, combinedReportsCSVFilePath)
 		logger.Info("Total LOC results can be found ", combinedReportsCSVFilePath)
 	}
