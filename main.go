@@ -36,6 +36,16 @@ func DiscoverRepositories(mode string, accessToken string, organization string) 
 	return repositoryInfoArr
 }
 
+// contains checks if a slice contains a specific string
+func contains(slice []string, item string) bool {
+	for _, str := range slice {
+		if str == item {
+			return true
+		}
+	}
+	return false
+}
+
 func main() {
 	// Parse command-line flags
 	logLevelArg := flag.String("log-level", "INFO", "Log level (DEBUG, INFO, WARN, ERROR)")
@@ -44,6 +54,8 @@ func main() {
 	accessTokenArg := flag.String("accessToken", "", "Your DevOps personal access token used for discovering and downloading repositories in your organization")
 	organizationArg := flag.String("organization", "", "Your DevOps organization name")
 	ignoreFilePathArg := flag.String("ignore-file", "", "(Optional) Path to your ignore file to exclude directories and files. Please see the README.md for how to format your ignore configuration")
+	excludeRepositoriesFilePathArg := flag.String("exclude-repositories-file", "", "(Optional) Path to your exclude repositories file to exclude repositories. Please see the README.md for how to format your exclude repositories configuration")
+	includeRepositoriesFilePathArg := flag.String("include-repositories-file", "", "(Optional) Path to your include repositories file to include repositories. Please see the README.md for how to format your include repositories configuration")
 
 	flag.Parse()
 
@@ -54,6 +66,8 @@ func main() {
 	accessToken := *accessTokenArg
 	organization := *organizationArg
 	ignoreFilePath := *ignoreFilePathArg
+	excludeRepositoriesFilePath := *excludeRepositoriesFilePathArg
+	includeRepositoriesFilePath := *includeRepositoriesFilePathArg
 
 	// set log level
 	logger.Info("Setting Log Level to " + logLevel)
@@ -73,6 +87,9 @@ func main() {
 		}
 	}
 
+	// validate optional arguments
+
+	// parse ignore patterns
 	ignorePatterns := []string{}
 	if ignoreFilePath != "" {
 		temp := scanner.ReadIgnoreFile(ignoreFilePath)
@@ -84,6 +101,31 @@ func main() {
 		ignorePatterns = temp
 	}
 
+	// parse exclude repositories
+	excludeRepositories := []string{}
+	if excludeRepositoriesFilePath != "" {
+		temp := scanner.ReadIgnoreFile(excludeRepositoriesFilePath)
+		if temp == nil {
+			logger.Error("Error reading exclude-repositories-file ", excludeRepositoriesFilePath)
+			os.Exit(-1)
+		}
+		logger.Debug("Successfully read in the exclude-repositories-file ", excludeRepositoriesFilePath)
+		excludeRepositories = temp
+	}
+
+	// parse include repositories
+	includeRepositories := []string{}
+	if includeRepositoriesFilePath != "" {
+		temp := scanner.ReadIgnoreFile(includeRepositoriesFilePath)
+		if temp == nil {
+			logger.Error("Error reading include-repositories-file ", includeRepositoriesFilePath)
+			os.Exit(-1)
+		}
+		logger.Debug("Successfully read in the include-repositories-file ", includeRepositoriesFilePath)
+		includeRepositories = temp
+	}
+
+	// Discover repositories
 	num_repos_found := 0
 	repositoryInfoArr := []clone.RepoInfo{}
 	if mode == LOCAL {
@@ -98,7 +140,7 @@ func main() {
 		logger.Info("Discovered ", num_repos_found, " repositories in ", organization)
 	}
 
-	// create folder with time stamp
+	// create output folder with time stamp
 	timeDir := time.Now().Format("20060102_150405") // Format: YYYYMMDD_HHMMSS
 	logger.Debug("Creating output folder ", timeDir)
 	err := os.Mkdir(timeDir, 0777)
@@ -109,6 +151,7 @@ func main() {
 	failedRepos := []clone.RepoInfo{}
 	csvFilePaths := []string{}
 
+	// for each repo, clone and scan
 	for index, repoInfo := range repositoryInfoArr {
 		clonedRepoDir := ""
 		if mode == LOCAL {
@@ -116,6 +159,18 @@ func main() {
 			clonedRepoDir = localScanFilePath
 			logger.Debug("Local file scan path is ", localScanFilePath)
 		} else if mode == GH {
+			// check if we should include or exclude this repo
+			if contains(excludeRepositories, repoInfo.RepositoryName) {
+				logger.Info((index + 1), "/", len(repositoryInfoArr), " skipping ", repoInfo.RepositoryName, " as it is in the exclude list")
+				continue
+			}
+
+			// check if we should include this repo
+			if len(includeRepositories) > 0 && !contains(includeRepositories, repoInfo.RepositoryName) {
+				logger.Info((index + 1), "/", len(repositoryInfoArr), " skipping ", repoInfo.RepositoryName, " as it is not in the include list")
+				continue
+			}
+
 			// print status
 			logger.Info((index + 1), "/", len(repositoryInfoArr), " cloning respository ", repoInfo.RepositoryName, "...")
 

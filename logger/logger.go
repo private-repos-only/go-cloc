@@ -4,6 +4,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"strings"
 )
 
 // Log level constants
@@ -21,6 +22,8 @@ func SetLogLevel(level int) {
 	logLevel = level
 }
 func ConvertStringToLogLevel(level string) int {
+	// make the level uppercase
+	level = strings.ToUpper(level)
 	// Map the string log level to an integer
 	switch level {
 	case "DEBUG":

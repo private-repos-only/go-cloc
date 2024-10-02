@@ -53,14 +53,13 @@ prompt> ./go-cloc --devops GitHub --organization MyExampleOrganization --accessT
 Local
 ```sh
 prompt> ./go-cloc main.js 
-prompt> ./go-cloc src/ --ignore-file ignore.txt
 ```
 
-## Ignore File
+## Ignore Files
 
 The ignore file is a simple text file used to exclude certain directories and files from processing. You can use a wildcard (`*`) to match patterns, similar to regular expressions. However, you can only use one `*` wildcard at a time. Make sure to place your ignore patterns in the ignore file, one per line, to apply them effectively.
 
-To clarify how the ignore file works, here are some examples:
+This same configuration format applies to **exclude** or **include** repositories using the **devops** flag
 
 - To ignore all files in a specific directory:
 
@@ -74,6 +73,22 @@ To clarify how the ignore file works, here are some examples:
 *.js
 ```
 
+* Combined examples
+```sh
+# Local scan with ignoring certain files or directoreis
+$ ./go-cloc src/ --ignore-file ignore.txt
+
+# DevOps scan ignoring certain repositores 
+$ ./go-cloc --devops GitHub \
+      --organization MyExampleOrganization \
+      --accessToken abcdefg1234 \
+      --exclude-repositories-file github_repos_to_ignore.txt
+
+# DevOps scan only including certain repositories
+$ ./go-cloc --devops GitHub \
+      --organization MyExampleOrganization \
+      --accessToken abcdefg1234 \
+      --include-repositories-file github_repos_to_include.txt
+```
+
 \* Note that if using the --devops flag, these patterns will apply to all repositories.
-
-
