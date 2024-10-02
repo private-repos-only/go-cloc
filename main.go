@@ -1,12 +1,11 @@
 package main
 
 import (
-	"flag"
 	"go-cloc/clone"
 	"go-cloc/logger"
 	"go-cloc/report"
 	"go-cloc/scanner"
-	"log"
+	"go-cloc/utilities"
 	"os"
 	"path/filepath"
 	"time"
@@ -23,19 +22,6 @@ import (
 // combine csv reports
 // report on any failed repos
 
-// Modes
-const (
-	LOCAL string = "Local"
-	GH    string = "GitHub"
-)
-
-func DiscoverRepositories(mode string, accessToken string, organization string) []clone.RepoInfo {
-	logger.Info("Discovering repositories in ", organization)
-	repositoryInfoArr := clone.DiscoverReposGithub(organization, accessToken)
-
-	return repositoryInfoArr
-}
-
 // contains checks if a slice contains a specific string
 func contains(slice []string, item string) bool {
 	for _, str := range slice {
@@ -47,105 +33,21 @@ func contains(slice []string, item string) bool {
 }
 
 func main() {
-	// Parse command-line flags
-	logLevelArg := flag.String("log-level", "INFO", "Log level (DEBUG, INFO, WARN, ERROR)")
-	modeArg := flag.String("devops", LOCAL, "flag : <GitHub>||<File>")
-	localScanFilePathArg := flag.String("local-file-path", "", "Path to your local file or directory that you want to scan")
-	accessTokenArg := flag.String("accessToken", "", "Your DevOps personal access token used for discovering and downloading repositories in your organization")
-	organizationArg := flag.String("organization", "", "Your DevOps organization name")
-	ignoreFilePathArg := flag.String("ignore-file", "", "(Optional) Path to your ignore file to exclude directories and files. Please see the README.md for how to format your ignore configuration")
-	excludeRepositoriesFilePathArg := flag.String("exclude-repositories-file", "", "(Optional) Path to your exclude repositories file to exclude repositories. Please see the README.md for how to format your exclude repositories configuration")
-	includeRepositoriesFilePathArg := flag.String("include-repositories-file", "", "(Optional) Path to your include repositories file to include repositories. Please see the README.md for how to format your include repositories configuration")
-
-	flag.Parse()
-
-	// dereference all CLI args to make it easier to use later
-	logLevel := *logLevelArg
-	mode := *modeArg
-	localScanFilePath := *localScanFilePathArg
-	accessToken := *accessTokenArg
-	organization := *organizationArg
-	ignoreFilePath := *ignoreFilePathArg
-	excludeRepositoriesFilePath := *excludeRepositoriesFilePathArg
-	includeRepositoriesFilePath := *includeRepositoriesFilePathArg
-
-	// set log level
-	logger.Info("Setting Log Level to " + logLevel)
-	logger.SetLogLevel(logger.ConvertStringToLogLevel(logLevel))
-	logger.SetOutput(os.Stdout)
-
-	// validate mandatory arguments
-	if mode == GH {
-		if organization == "" || accessToken == "" {
-			logger.Error("Mode ", mode, " requires : --organization & --accessToken")
-			os.Exit(-1)
-		}
-	} else if mode == LOCAL {
-		if localScanFilePath == "" {
-			logger.Error("Mode ", mode, " requires : --local-file-path")
-			os.Exit(-1)
-		}
-	}
-
-	// validate optional arguments
-
-	// parse ignore patterns
-	ignorePatterns := []string{}
-	if ignoreFilePath != "" {
-		temp := scanner.ReadIgnoreFile(ignoreFilePath)
-		if temp == nil {
-			logger.Error("Error reading ignore-file ", ignoreFilePath)
-			os.Exit(-1)
-		}
-		logger.Debug("Successfully read in the ignore-file ", ignoreFilePath)
-		ignorePatterns = temp
-	}
-
-	// parse exclude repositories
-	excludeRepositories := []string{}
-	if excludeRepositoriesFilePath != "" {
-		temp := scanner.ReadIgnoreFile(excludeRepositoriesFilePath)
-		if temp == nil {
-			logger.Error("Error reading exclude-repositories-file ", excludeRepositoriesFilePath)
-			os.Exit(-1)
-		}
-		logger.Debug("Successfully read in the exclude-repositories-file ", excludeRepositoriesFilePath)
-		excludeRepositories = temp
-	}
-
-	// parse include repositories
-	includeRepositories := []string{}
-	if includeRepositoriesFilePath != "" {
-		temp := scanner.ReadIgnoreFile(includeRepositoriesFilePath)
-		if temp == nil {
-			logger.Error("Error reading include-repositories-file ", includeRepositoriesFilePath)
-			os.Exit(-1)
-		}
-		logger.Debug("Successfully read in the include-repositories-file ", includeRepositoriesFilePath)
-		includeRepositories = temp
-	}
+	// parse CLI arguments and store them in a struct
+	args := utilities.ParseArgsFromCLI()
 
 	// Discover repositories
-	num_repos_found := 0
-	repositoryInfoArr := []clone.RepoInfo{}
-	if mode == LOCAL {
-		num_repos_found = 1
-		repositoryInfo := clone.NewRepoInfo("local-org", "", "local")
-		repositoryInfoArr = append(repositoryInfoArr, repositoryInfo)
-
-	} else if mode == GH {
-		repositoryInfoArr = DiscoverRepositories(mode, accessToken, organization)
-		num_repos_found = len(repositoryInfoArr)
-
-		logger.Info("Discovered ", num_repos_found, " repositories in ", organization)
-	}
+	logger.Info("Discovering repositories...")
+	repositoryInfoArr := DiscoverRepositories(args.Mode, args.AccessToken, args.Organization)
+	num_repos_found := len(repositoryInfoArr)
+	logger.Info("Discovered ", num_repos_found, " repositories in ", args.Organization)
 
 	// create output folder with time stamp
 	timeDir := time.Now().Format("20060102_150405") // Format: YYYYMMDD_HHMMSS
-	logger.Debug("Creating output folder ", timeDir)
+	logger.Debug("Creating folder ", timeDir, " to store results")
 	err := os.Mkdir(timeDir, 0777)
 	if err != nil {
-		log.Fatalln(err)
+		logger.LogStackTraceAndExit(err)
 	}
 
 	failedRepos := []clone.RepoInfo{}
@@ -153,20 +55,23 @@ func main() {
 
 	// for each repo, clone and scan
 	for index, repoInfo := range repositoryInfoArr {
+		// set directory
 		clonedRepoDir := ""
-		if mode == LOCAL {
+		logger.Debug("Setting directory for ", repoInfo.RepositoryName, " to begin scanning")
+		if args.Mode == utilities.LOCAL {
 			// set directory or file to local file
-			clonedRepoDir = localScanFilePath
-			logger.Debug("Local file scan path is ", localScanFilePath)
-		} else if mode == GH {
+			clonedRepoDir = args.LocalScanFilePath
+			logger.Debug("Local file scan path is ", args.LocalScanFilePath)
+		} else {
+			logger.Debug("Checking repo ", repoInfo.RepositoryName, " for exclusion")
 			// check if we should include or exclude this repo
-			if contains(excludeRepositories, repoInfo.RepositoryName) {
+			if contains(args.ExcludeRepositories, repoInfo.RepositoryName) {
 				logger.Info((index + 1), "/", len(repositoryInfoArr), " skipping ", repoInfo.RepositoryName, " as it is in the exclude list")
 				continue
 			}
 
 			// check if we should include this repo
-			if len(includeRepositories) > 0 && !contains(includeRepositories, repoInfo.RepositoryName) {
+			if len(args.IncludeRepositories) > 0 && !contains(args.IncludeRepositories, repoInfo.RepositoryName) {
 				logger.Info((index + 1), "/", len(repositoryInfoArr), " skipping ", repoInfo.RepositoryName, " as it is not in the include list")
 				continue
 			}
@@ -174,19 +79,36 @@ func main() {
 			// print status
 			logger.Info((index + 1), "/", len(repositoryInfoArr), " cloning respository ", repoInfo.RepositoryName, "...")
 
-			// clone repo
-			clonedRepoDir = clone.CloneGithubRepoViaZip(repoInfo, accessToken)
-			if clonedRepoDir == "" {
-				// Failed to clone repo, save metadata for later reporting
-				// TODO dump this to CSV
-				failedRepos = append(failedRepos, repoInfo)
-				continue
+			if args.CloneRepoUsingZip {
+				logger.Debug("Cloning using zip")
+
+				// clone repo
+				zipUrl := clone.CreateZipURLGithub(repoInfo.OrganizationName, repoInfo.RepositoryName)
+				clonedRepoDir = clone.DonwloadAndUnzip(zipUrl, repoInfo.RepositoryName, args.AccessToken)
+				if clonedRepoDir == "" {
+					// Failed to clone repo, save metadata for later reporting
+					// TODO dump this to CSV
+					failedRepos = append(failedRepos, repoInfo)
+					continue
+				}
+			} else {
+				logger.Debug("Cloning using git clone")
+				// clone repo
+				clonedRepoDir = CloneRepoMain(args.Mode, args.AccessToken, args.Organization, repoInfo)
+
+				// Handle failed repos
+				if clonedRepoDir == "" {
+					// Failed to clone repo, save metadata for later reporting
+					// TODO dump this to CSV
+					failedRepos = append(failedRepos, repoInfo)
+					continue
+				}
 			}
 		}
 
 		// scan LOC for the directory
 		logger.Info("Scanning ", clonedRepoDir, "...")
-		filePaths := scanner.WalkDirectory(clonedRepoDir, ignorePatterns)
+		filePaths := scanner.WalkDirectory(clonedRepoDir, args.IgnorePatterns)
 		resultsArr := []scanner.FileScanResults{}
 		for _, filePath := range filePaths {
 			resultsArr = append(resultsArr, scanner.ScanFile(filePath))
@@ -200,9 +122,9 @@ func main() {
 		csvFilePaths = append(csvFilePaths, outputCSV_fullPath)
 		logger.Info("Done! Results for ", repoInfo.RepositoryName, " can be found ", outputCSV_fullPath)
 
-		if mode == LOCAL {
+		if args.Mode == utilities.LOCAL {
 			// do not delete the directory
-		} else if mode == GH {
+		} else {
 			// Attempt to remove the directory and its contents
 			logger.Debug("Deleting directory ", clonedRepoDir)
 			err := os.RemoveAll(clonedRepoDir)
@@ -214,9 +136,9 @@ func main() {
 
 	// print failed repos
 	// TODO dump to csv
-	if mode == LOCAL {
+	if args.Mode == utilities.LOCAL {
 		// nothing should have failed
-	} else if mode == GH {
+	} else {
 		numFailedRepos := len(failedRepos)
 		if numFailedRepos > 0 {
 			logger.Info(numFailedRepos, "/", num_repos_found, " failed to process. See below for a list")
@@ -229,17 +151,56 @@ func main() {
 	}
 
 	totalLoc := 0
-	if mode == LOCAL {
+	if args.Mode == utilities.LOCAL {
 		reportTotals := report.ParseTotalsFromCSVs(csvFilePaths)
 		totalLoc = reportTotals[0].Total
-	} else if mode == GH {
+	} else {
 		// combine csv reports
 		logger.Debug("Combining results...")
 		repoResults := report.ParseTotalsFromCSVs(csvFilePaths)
-		combinedReportsCSVFilePath := filepath.Join(timeDir, "AAA_combined_results.csv")
+		combinedReportsCSVFilePath := filepath.Join(timeDir, "AAA-combined-total-lines.csv")
 		totalLoc = report.OutputCombinedCSV(repoResults, combinedReportsCSVFilePath)
 		logger.Info("Total LOC results can be found ", combinedReportsCSVFilePath)
 	}
 
-	logger.Info("Total LOC for ", organization, " is ", totalLoc)
+	logger.Info("Total LOC for ", args.Organization, " is ", totalLoc)
+}
+
+func CloneRepoMain(mode string, accessToken string, organization string, repoInfo clone.RepoInfo) string {
+	cloneRepoUrl := ""
+	clonedRepoDir := ""
+	if mode == utilities.GITHUB {
+		cloneRepoUrl = clone.CreateCloneURLGithub(accessToken, organization, repoInfo.RepositoryName)
+		clonedRepoDir = clone.CloneRepo(cloneRepoUrl, accessToken, repoInfo.RepositoryName)
+
+	} else if mode == utilities.AZUREDEVOPS {
+		cloneRepoUrl = clone.CreateCloneURLAzureDevOps(accessToken, organization, repoInfo.ProjectName, repoInfo.RepositoryName)
+		// cloneRepoUrl = clone.CloneRepoAzureDevOps(accessToken, repoInfo.OrganizationName, repoInfo.ProjectName, repoInfo.RepositoryName)
+		clonedRepoDir = clone.CloneRepoAzureDevOps(cloneRepoUrl, accessToken, repoInfo.RepositoryName)
+	} else if mode == utilities.GITLAB {
+		cloneRepoUrl = clone.CreateCloneURLGitLab(accessToken, organization, repoInfo.RepositoryName)
+		clonedRepoDir = clone.CloneRepo(cloneRepoUrl, accessToken, repoInfo.RepositoryName)
+	} else {
+		logger.Error("Mode ", mode, " is not supported")
+	}
+	return clonedRepoDir
+}
+
+func DiscoverRepositories(mode string, accessToken string, organization string) []clone.RepoInfo {
+	repositoryInfoArr := []clone.RepoInfo{}
+	if mode == utilities.LOCAL {
+		repositoryInfo := clone.NewRepoInfo("local-org", "", "local")
+		repositoryInfoArr = append(repositoryInfoArr, repositoryInfo)
+	} else if mode == utilities.GITHUB {
+		repositoryInfoArr = clone.DiscoverReposGithub(organization, accessToken)
+	} else if mode == utilities.AZUREDEVOPS {
+		repositoryInfoArr = clone.DiscoverReposAzureDevOps(organization, accessToken)
+	} else if mode == utilities.GITLAB {
+		repositoryInfoArr = clone.DiscoverReposGitlab(organization, accessToken)
+	} else if mode == utilities.BITBUCKET {
+		repositoryInfoArr = clone.DiscoverReposBitbucket(organization, accessToken)
+	} else {
+		logger.LogStackTraceAndExit("Mode " + mode + " is not supported")
+	}
+	return repositoryInfoArr
 }

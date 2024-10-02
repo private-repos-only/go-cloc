@@ -181,11 +181,20 @@ func loadIgnorePatterns(patterns []string) []*regexp.Regexp {
 	return regexps
 }
 
-// Function to read the ignore file and return the list of ignored items
+// ReadIgnoreFile reads a file specified by the given path and returns a slice of strings
+// containing non-empty, trimmed lines from the file. It logs the file path being read and
+// exits the program if an error occurs while reading the file.
+//
+// Parameters:
+//   - path: The file path to read.
+//
+// Returns:
+//   - A slice of strings containing the non-empty, trimmed lines from the file.
 func ReadIgnoreFile(path string) []string {
+	logger.Debug("Reading ignore file ", path)
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return nil
+		logger.LogStackTraceAndExit(err)
 	}
 
 	// Split the file content by new lines and trim spaces

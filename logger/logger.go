@@ -4,6 +4,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"runtime"
 	"strings"
 )
 
@@ -67,6 +68,18 @@ func Warn(v ...interface{}) {
 // Error logs a message at the ERROR level
 func Error(v ...interface{}) {
 	logMessage(ERROR, "[ERROR]", v...)
+}
+
+func LogStackTraceAndExit(err interface{}) {
+	// log erro
+	if err != nil {
+		Error(err)
+	}
+	// log stack trace
+	buf := make([]byte, 1024)
+	runtime.Stack(buf, false)
+	Error("Stack trace:\n", string(buf))
+	os.Exit(-1)
 }
 
 // Route logs to whichever file

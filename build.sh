@@ -3,6 +3,9 @@
 # clean build directory
 rm -rf builds/
 
+# remove unused packages
+go mod tidy
+
 # Set the output directory and binary name
 OUTPUT_DIR="builds"
 BINARY_NAME="go-cloc" # Change this to your program's name

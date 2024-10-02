@@ -2,7 +2,6 @@ package clone
 
 import (
 	"archive/zip"
-	"encoding/json"
 	"go-cloc/logger"
 	"io"
 	"log"
@@ -10,7 +9,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/go-git/go-git/v5"
 )
@@ -80,14 +78,8 @@ func UnzipAndRename(src string, dest string, newFolderName string) error {
 /*
 @return The resulting directory name of the repository
 */
-func CloneGithubRepoViaZip(repoInfo RepoInfo, accessToken string) string {
-	// extract data
-	organization := repoInfo.OrganizationName
-	repoName := repoInfo.RepositoryName
+func DonwloadAndUnzip(getUrl string, repoName string, accessToken string) string {
 
-	// make getURL
-	// getUrl := "https://api.github.com/repos/cole-gannaway-sonarsource/cloc-wrapper/zipball"
-	getUrl := "https://oauth2:" + accessToken + "@api.github.com/repos/" + organization + "/" + repoName + "/zipball"
 	logger.Debug("Cloning using url: ", getUrl)
 
 	// Make API call
@@ -126,17 +118,19 @@ func CloneGithubRepoViaZip(repoInfo RepoInfo, accessToken string) string {
 	// return the resulting directory
 	return repoName
 }
-func CloneRepo(organization string, repoName string, accessToken string) {
+
+func CloneRepo(url string, accessToken string, repoName string) string {
 	// Clone the given repository to the given directory
-	url := "https://oauth2:" + accessToken + "@github.com/" + organization + "/" + repoName + ".git"
 	dir := "./" + repoName // Directory where repo will be cloned
 
-	log.Printf("Cloning %s into %s...\n", url, dir)
+	logger.Debug("Cloning url: ", url, " into directory: ", dir)
+	// .Printf("Cloning %s into %s...\n", url, dir)
 
-	// Clone repository to specified directory
+	// Clone repository to specified directory with authentication
 	_, err := git.PlainClone(dir, false, &git.CloneOptions{
-		URL:      url,
-		Progress: log.Writer(), // Display progress in the log
+		URL:          url,
+		SingleBranch: true,
+		Depth:        1,
 	})
 
 	if err != nil {
@@ -144,61 +138,5 @@ func CloneRepo(organization string, repoName string, accessToken string) {
 	}
 
 	logger.Debug("Repository successfully cloned!")
-}
-
-// Define a struct with only the fields you care about
-type GithubAPIItem struct {
-	Name string `json:"name"`
-}
-
-func DiscoverReposGithub(organization string, authToken string) []RepoInfo {
-	apiURL := "https://api.github.com/orgs/" + organization + "/repos?per_page=100&page=1"
-
-	// Create a new HTTP request
-	req, err := http.NewRequest("GET", apiURL, nil)
-	if err != nil {
-		log.Fatalf("Failed to create HTTP request: %v", err)
-	}
-
-	// Add the Authorization header
-	req.Header.Set("Authorization", "Bearer "+authToken)
-
-	// Perform the request using the default HTTP client
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		log.Fatalf("Failed to fetch data from API: %v", err)
-	}
-	defer resp.Body.Close()
-
-	// Check if the status code is 200
-	if resp.StatusCode != http.StatusOK {
-		log.Fatalf("Unexpected status code: %d, expected 200", resp.StatusCode)
-	}
-
-	// Read the response body
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		log.Fatalf("Failed to read response body: %v", err)
-	}
-
-	// Parse the JSON response into a slice of Item
-	var result []GithubAPIItem
-	if err := json.Unmarshal(body, &result); err != nil {
-		log.Fatalf("Failed to parse JSON: %v", err)
-	}
-
-	// Print the parsed data
-	repoNames := []RepoInfo{}
-	for _, item := range result {
-		repoInfo := NewRepoInfo(organization, "", item.Name)
-		repoNames = append(repoNames, repoInfo)
-	}
-	return repoNames
-}
-
-func NowTime() string {
-	now := time.Now()
-	timestamp := now.Format(time.RFC3339)
-	return timestamp
+	return repoName
 }
