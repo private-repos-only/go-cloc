@@ -133,8 +133,10 @@ func CloneRepo(url string, accessToken string, repoName string) string {
 		Depth:        1,
 	})
 
+	// Check to see if there was an error cloning the repo
 	if err != nil {
-		log.Fatalf("Error cloning repository: %s", err)
+		logger.Error("Error cloning repository: ", repoName, " : ", err)
+		return ""
 	}
 
 	logger.Debug("Repository successfully cloned!")
