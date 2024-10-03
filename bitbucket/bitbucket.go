@@ -1,7 +1,8 @@
-package clone
+package bitbucket
 
 import (
 	"encoding/json"
+	"go-cloc/devops"
 	"go-cloc/logger"
 	"io"
 	"log"
@@ -14,7 +15,7 @@ type item struct {
 }
 
 type response struct {
-	Value []Item `json:"values"`
+	Value []item `json:"values"`
 }
 
 func CreateCloneURLBitbucket(accessToken string, organization string, respository string) string {
@@ -25,7 +26,7 @@ func CreateCloneURLBitbucket(accessToken string, organization string, respositor
 func CreateDiscoverURLBitbucket(organization string) string {
 	return "https://api.bitbucket.org/2.0/repositories/" + organization
 }
-func DiscoverReposBitbucket(organization string, accessToken string) []RepoInfo {
+func DiscoverReposBitbucket(organization string, accessToken string) []devops.RepoInfo {
 	apiURL := CreateDiscoverURLBitbucket(organization)
 	logger.Debug("Discovering repos using url: ", apiURL)
 
@@ -59,17 +60,17 @@ func DiscoverReposBitbucket(organization string, accessToken string) []RepoInfo 
 	}
 
 	// Unmarshal the JSON data into the Response struct
-	var response response
-	err = json.Unmarshal([]byte(body), &response)
+	var r response
+	err = json.Unmarshal([]byte(body), &r)
 	if err != nil {
 		log.Fatalf("Error unmarshalling JSON: %v", err)
 	}
 
-	logger.Debug("Response: ", response)
+	logger.Debug("Response: ", r)
 
-	repoNames := []RepoInfo{}
+	repoNames := []devops.RepoInfo{}
 	// Access the nested Name field
-	for _, item := range response.Value {
+	for _, item := range r.Value {
 		projectName := item.Name
 		logger.Debug("Project Name:", projectName)
 		// 'https://dev.azure.com/{organization}/{project_name}/_apis/git/repositories?api-version=7.0'
@@ -104,14 +105,14 @@ func DiscoverReposBitbucket(organization string, accessToken string) []RepoInfo 
 		}
 
 		// Unmarshal the JSON data into the Response struct
-		var response Response
-		err = json.Unmarshal([]byte(body), &response)
+		var r response
+		err = json.Unmarshal([]byte(body), &r)
 		if err != nil {
 			log.Fatalf("Error unmarshalling JSON: %v", err)
 		}
-		for _, item := range response.Value {
+		for _, item := range r.Value {
 			repoName := item.Name
-			repoInfo := NewRepoInfo(organization, projectName, repoName)
+			repoInfo := devops.NewRepoInfo(organization, projectName, repoName)
 			repoNames = append(repoNames, repoInfo)
 		}
 	}

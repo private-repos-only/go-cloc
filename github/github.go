@@ -1,7 +1,8 @@
-package clone
+package github
 
 import (
 	"encoding/json"
+	"go-cloc/devops"
 	"go-cloc/logger"
 	"io"
 	"net/http"
@@ -18,7 +19,7 @@ func CreateZipURLGithub(organization string, repoName string) string {
 }
 
 // Define a struct with only the fields you care about
-type GithubAPIItem struct {
+type item struct {
 	Name string `json:"name"`
 }
 
@@ -26,7 +27,7 @@ func CreateDiscoverURLGitHub(organization string) string {
 	return "https://api.github.com/orgs/" + organization + "/repos?per_page=100&page=1"
 }
 
-func DiscoverReposGithub(organization string, accessToken string) []RepoInfo {
+func DiscoverReposGithub(organization string, accessToken string) []devops.RepoInfo {
 	apiURL := CreateDiscoverURLGitHub(organization)
 	logger.Debug("GET: " + apiURL)
 	logger.Debug("Using access token: " + accessToken)
@@ -57,7 +58,7 @@ func DiscoverReposGithub(organization string, accessToken string) []RepoInfo {
 	}
 
 	// Parse the JSON response into a slice of Item
-	var result []GithubAPIItem
+	var result []item
 	if err := json.Unmarshal(body, &result); err != nil {
 		logger.Error("Failed to parse JSON: ", err)
 		logger.LogStackTraceAndExit(err)
@@ -66,9 +67,9 @@ func DiscoverReposGithub(organization string, accessToken string) []RepoInfo {
 	// Print the parsed data
 	logger.Debug(result)
 
-	repoNames := []RepoInfo{}
+	repoNames := []devops.RepoInfo{}
 	for _, item := range result {
-		repoInfo := NewRepoInfo(organization, "", item.Name)
+		repoInfo := devops.NewRepoInfo(organization, "", item.Name)
 		repoNames = append(repoNames, repoInfo)
 	}
 	return repoNames

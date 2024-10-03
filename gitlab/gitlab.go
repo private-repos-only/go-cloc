@@ -1,7 +1,8 @@
-package clone
+package gitlab
 
 import (
 	"encoding/json"
+	"go-cloc/devops"
 	"go-cloc/logger"
 	"io"
 	"log"
@@ -20,7 +21,13 @@ func CreateDiscoverURLGitLab(accessToken string, organization string) string {
 	// https://gitlab.com/api/v4/groups/cole-gannaway-sonarsource/projects?include_subgroups=true
 
 }
-func DiscoverReposGitlab(organization string, accessToken string) []RepoInfo {
+
+// Define the nested struct types
+type item struct {
+	Name string `json:"name"`
+}
+
+func DiscoverReposGitlab(organization string, accessToken string) []devops.RepoInfo {
 	apiURL := CreateDiscoverURLGitLab(accessToken, organization)
 	logger.Debug("Discovering repos using url: ", apiURL)
 
@@ -53,15 +60,15 @@ func DiscoverReposGitlab(organization string, accessToken string) []RepoInfo {
 	}
 
 	// Parse the JSON response into a slice of Item
-	var result []GithubAPIItem
+	var result []item
 	if err := json.Unmarshal(body, &result); err != nil {
 		log.Fatalf("Failed to parse JSON: %v", err)
 	}
 
 	// Print the parsed data
-	repoNames := []RepoInfo{}
+	repoNames := []devops.RepoInfo{}
 	for _, item := range result {
-		repoInfo := NewRepoInfo(organization, "", item.Name)
+		repoInfo := devops.NewRepoInfo(organization, "", item.Name)
 		repoNames = append(repoNames, repoInfo)
 	}
 	return repoNames

@@ -1,4 +1,4 @@
-package clone
+package devops
 
 type RepoInfo struct {
 	Id               string

@@ -1,4 +1,4 @@
-package clone
+package gitlab
 
 import (
 	"testing"

@@ -1,7 +1,8 @@
-package clone
+package azuredevops
 
 import (
 	"encoding/json"
+	"go-cloc/devops"
 	"go-cloc/logger"
 	"io"
 	"log"
@@ -9,12 +10,12 @@ import (
 )
 
 // Define the nested struct types
-type Item struct {
+type item struct {
 	Name string `json:"name"`
 }
 
-type Response struct {
-	Value []Item `json:"value"`
+type response struct {
+	Value []item `json:"value"`
 }
 
 func CreateCloneURLAzureDevOps(accessToken string, organization string, projectName string, repoName string) string {
@@ -22,7 +23,7 @@ func CreateCloneURLAzureDevOps(accessToken string, organization string, projectN
 
 }
 
-func DiscoverReposAzureDevOps(organization string, accessToken string) []RepoInfo {
+func DiscoverReposAzureDevOps(organization string, accessToken string) []devops.RepoInfo {
 	apiURL := "https://dev.azure.com/" + organization + "/_apis/projects?api-version=7.0"
 
 	// Create a new HTTP request
@@ -55,15 +56,15 @@ func DiscoverReposAzureDevOps(organization string, accessToken string) []RepoInf
 	}
 
 	// Unmarshal the JSON data into the Response struct
-	var response Response
-	err = json.Unmarshal([]byte(body), &response)
+	var r response
+	err = json.Unmarshal([]byte(body), &r)
 	if err != nil {
 		log.Fatalf("Error unmarshalling JSON: %v", err)
 	}
 
-	repoNames := []RepoInfo{}
+	repoNames := []devops.RepoInfo{}
 	// Access the nested Name field
-	for _, item := range response.Value {
+	for _, item := range r.Value {
 		projectName := item.Name
 		logger.Debug("Project Name:", projectName)
 
@@ -98,14 +99,15 @@ func DiscoverReposAzureDevOps(organization string, accessToken string) []RepoInf
 		}
 
 		// Unmarshal the JSON data into the Response struct
-		var response Response
-		err = json.Unmarshal([]byte(body), &response)
+
+		r := response{}
+		err = json.Unmarshal([]byte(body), &r)
 		if err != nil {
 			log.Fatalf("Error unmarshalling JSON: %v", err)
 		}
-		for _, item := range response.Value {
+		for _, item := range r.Value {
 			repoName := item.Name
-			repoInfo := NewRepoInfo(organization, projectName, repoName)
+			repoInfo := devops.NewRepoInfo(organization, projectName, repoName)
 			repoNames = append(repoNames, repoInfo)
 		}
 	}
