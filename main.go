@@ -13,7 +13,6 @@ import (
 	"go-cloc/utilities"
 	"os"
 	"path/filepath"
-	"time"
 )
 
 // pseduocode
@@ -44,21 +43,44 @@ func main() {
 	// Discover repositories
 	logger.Info("Discovering repositories...")
 	repositoryInfoArr := DiscoverRepositories(args.Mode, args.AccessToken, args.Organization)
-	num_repos_found := len(repositoryInfoArr)
-	logger.Info("Discovered ", num_repos_found, " repositories in ", args.Organization)
+	initialNumReposFound := len(repositoryInfoArr)
+	logger.Info("Discovered ", initialNumReposFound, " repositories in ", args.Organization)
 
-	// create output folder with time stamp
-	timeDir := time.Now().Format("20060102_150405") // Format: YYYYMMDD_HHMMSS
-	logger.Debug("Creating folder ", timeDir, " to store results")
-	err := os.Mkdir(timeDir, 0777)
-	if err != nil {
-		logger.LogStackTraceAndExit(err)
+	// Filter repositories
+	logger.Info("Including / Excluding repositories...")
+	fitleredRepoInfoArr := []devops.RepoInfo{}
+	for _, repoInfo := range repositoryInfoArr {
+		logger.Debug("Checking repo ", repoInfo.RepositoryName, " for exclusion")
+		// check if we should include or exclude this repo
+		if contains(args.ExcludeRepositories, repoInfo.RepositoryName) {
+			logger.Debug("Excluding ", repoInfo.RepositoryName, " as it is in the exclude list")
+			continue
+		}
+
+		// check if we should include this repo
+		if len(args.IncludeRepositories) > 0 && !contains(args.IncludeRepositories, repoInfo.RepositoryName) {
+			logger.Debug("Excluding ", repoInfo.RepositoryName, " as it is NOT in the include list")
+			continue
+		}
+
+		logger.Debug("Including ", repoInfo.RepositoryName)
+		fitleredRepoInfoArr = append(fitleredRepoInfoArr, repoInfo)
+	}
+	numRepos := len(fitleredRepoInfoArr)
+
+	// create output folder
+	if args.DumpCSVs {
+		logger.Debug("Creating folder ", args.ResultsDirectoryPath, " to store results")
+		err := os.Mkdir(args.ResultsDirectoryPath, 0777)
+		if err != nil {
+			logger.LogStackTraceAndExit(err)
+		}
 	}
 
 	failedRepos := []devops.RepoInfo{}
 	allRepoResults := []report.RepoTotal{}
 	// for each repo, clone and scan
-	for index, repoInfo := range repositoryInfoArr {
+	for index, repoInfo := range fitleredRepoInfoArr {
 		// set directory
 		clonedRepoDir := ""
 		logger.Debug("Setting directory for ", repoInfo.RepositoryName, " to begin scanning")
@@ -67,21 +89,9 @@ func main() {
 			clonedRepoDir = args.LocalScanFilePath
 			logger.Debug("Local file scan path is ", args.LocalScanFilePath)
 		} else {
-			logger.Debug("Checking repo ", repoInfo.RepositoryName, " for exclusion")
-			// check if we should include or exclude this repo
-			if contains(args.ExcludeRepositories, repoInfo.RepositoryName) {
-				logger.Info((index + 1), "/", len(repositoryInfoArr), " skipping ", repoInfo.RepositoryName, " as it is in the exclude list")
-				continue
-			}
-
-			// check if we should include this repo
-			if len(args.IncludeRepositories) > 0 && !contains(args.IncludeRepositories, repoInfo.RepositoryName) {
-				logger.Info((index + 1), "/", len(repositoryInfoArr), " skipping ", repoInfo.RepositoryName, " as it is not in the include list")
-				continue
-			}
 
 			// print status
-			logger.Info((index + 1), "/", len(repositoryInfoArr), " cloning respository ", repoInfo.RepositoryName, "...")
+			logger.Info((index + 1), "/", len(fitleredRepoInfoArr), " cloning respository ", repoInfo.RepositoryName, "...")
 
 			if args.CloneRepoUsingZip {
 				logger.Debug("Cloning using zip")
@@ -119,18 +129,21 @@ func main() {
 		}
 
 		// Dump results by file in a csv
-		outputCsvFilePath := filepath.Join(timeDir, repoInfo.Id+".csv")
-		logger.Debug("Dumping results to ", outputCsvFilePath)
-		codeLineCount := report.OutputCSV(resultsArr, outputCsvFilePath)
-		allRepoResults = append(allRepoResults, report.RepoTotal{RepositoryName: repoInfo.RepositoryName, Total: codeLineCount})
+		if args.DumpCSVs {
+			outputCsvFilePath := filepath.Join(args.ResultsDirectoryPath, repoInfo.Id+".csv")
+			logger.Debug("Dumping results to ", outputCsvFilePath)
+			codeLineCount := report.OutputCSV(resultsArr, outputCsvFilePath)
+			allRepoResults = append(allRepoResults, report.RepoTotal{RepositoryName: repoInfo.RepositoryName, Total: codeLineCount})
 
-		// TODO error checking
-		logger.Info("Done! Results for ", repoInfo.RepositoryName, " can be found ", outputCsvFilePath)
+			// TODO error checking
+			logger.Info("Done! Results for ", repoInfo.RepositoryName, " can be found ", outputCsvFilePath)
+		}
 
+		// clean up cloned repo after scan completes
 		if args.Mode == utilities.LOCAL {
-			// do not delete the directory
+			// do not delete the directory if we are scanning a local file or directory
 		} else {
-			// Attempt to remove the directory and its contents
+			// delete the cloned repo directory after scanning
 			logger.Debug("Deleting directory ", clonedRepoDir)
 			err := os.RemoveAll(clonedRepoDir)
 			if err != nil {
@@ -140,29 +153,26 @@ func main() {
 	}
 
 	// print failed repos
-	// TODO dump to csv
-	if args.Mode == utilities.LOCAL {
-		// nothing should have failed
-	} else {
-		numFailedRepos := len(failedRepos)
-		if numFailedRepos > 0 {
-			logger.Info(numFailedRepos, "/", num_repos_found, " failed to process. See below for a list")
-			for _, failedRepo := range failedRepos {
-				logger.Info(failedRepo.RepositoryName, " - ", failedRepo.Id)
-			}
-		} else {
-			logger.Info("0 repos failed to scan.")
+	numFailedRepos := len(failedRepos)
+	if numFailedRepos > 0 {
+		logger.Info(numFailedRepos, "/", numRepos, " failed to process. See below for a list")
+		for _, failedRepo := range failedRepos {
+			logger.Info(failedRepo.RepositoryName, " - ", failedRepo.Id)
 		}
+	} else {
+		logger.Info("0 repos failed to scan.")
 	}
 
-	// count total LOC
+	// sum total LOC for all repos
 	totalLoc := 0
-	if args.Mode == utilities.LOCAL {
-		totalLoc = allRepoResults[0].Total
-	} else {
-		// combine csv reports
+	for _, repoResult := range allRepoResults {
+		totalLoc += repoResult.Total
+	}
+
+	// dump combined csv reports
+	if args.DumpCSVs {
 		logger.Debug("Combining results...")
-		combinedReportsCSVFilePath := filepath.Join(timeDir, "AAA-combined-total-lines.csv")
+		combinedReportsCSVFilePath := filepath.Join(args.ResultsDirectoryPath, "AAA-combined-total-lines.csv")
 		totalLoc = report.OutputCombinedCSV(allRepoResults, combinedReportsCSVFilePath)
 		logger.Info("Total LOC results can be found ", combinedReportsCSVFilePath)
 	}

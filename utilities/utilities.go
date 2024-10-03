@@ -5,6 +5,7 @@ import (
 	"go-cloc/logger"
 	"go-cloc/scanner"
 	"os"
+	"time"
 )
 
 // Modes
@@ -17,15 +18,17 @@ const (
 )
 
 type CLIArgs struct {
-	LogLevel            string
-	Mode                string
-	LocalScanFilePath   string
-	AccessToken         string
-	Organization        string
-	IgnorePatterns      []string
-	ExcludeRepositories []string
-	IncludeRepositories []string
-	CloneRepoUsingZip   bool
+	LogLevel             string
+	Mode                 string
+	LocalScanFilePath    string
+	AccessToken          string
+	Organization         string
+	IgnorePatterns       []string
+	ExcludeRepositories  []string
+	IncludeRepositories  []string
+	CloneRepoUsingZip    bool
+	DumpCSVs             bool
+	ResultsDirectoryPath string
 }
 
 func ParseArgsFromCLI() CLIArgs {
@@ -40,7 +43,9 @@ func ParseArgsFromCLI() CLIArgs {
 	ignoreFilePathArg := flag.String("ignore-file", "", "(Optional) Path to your ignore file to exclude directories and files. Please see the README.md for how to format your ignore configuration")
 	excludeRepositoriesFilePathArg := flag.String("exclude-repositories-file", "", "(Optional) Path to your exclude repositories file to exclude repositories. Please see the README.md for how to format your exclude repositories configuration")
 	includeRepositoriesFilePathArg := flag.String("include-repositories-file", "", "(Optional) Path to your include repositories file to include repositories. Please see the README.md for how to format your include repositories configuration")
-	cloneRepoUsingZipArg := flag.Bool("clone-repo-using-zip", false, "Flag to clone repositories using zip files instead of git clone for performance improvements")
+	cloneRepoUsingZipArg := flag.Bool("clone-repo-using-zip", false, "(Optional) Flag to clone repositories using zip files instead of git clone for performance improvements")
+	dumpCSVsArg := flag.Bool("dump-csvs", true, "(Optional) Flag to dump CSV files for each repository scanned. Default is true, but can be set to false to disable CSV dumps")
+	resultsDirectoryPathArg := flag.String("results-directory-path", "", "(Optional) Path to the directory where you want to store the results. Default the tool will create one with a timestamp")
 
 	// parse the CLI arguments
 	flag.Parse()
@@ -55,6 +60,8 @@ func ParseArgsFromCLI() CLIArgs {
 	excludeRepositoriesFilePath := *excludeRepositoriesFilePathArg
 	includeRepositoriesFilePath := *includeRepositoriesFilePathArg
 	cloneRepoUsingZip := *cloneRepoUsingZipArg
+	dumpCSVs := *dumpCSVsArg
+	resultsDirectoryPath := *resultsDirectoryPathArg
 
 	// set log level
 	logger.SetLogLevel(logger.ConvertStringToLogLevel(logLevel))
@@ -66,6 +73,7 @@ func ParseArgsFromCLI() CLIArgs {
 	// print out arguments
 	logger.Debug("Mode: ", mode)
 	logger.Debug("clone-repo-using-zip: ", cloneRepoUsingZip)
+	logger.Debug("dump-csvs: ", dumpCSVs)
 
 	// validate mandatory arguments
 	logger.Debug("Validating mandatory arguments")
@@ -110,16 +118,29 @@ func ParseArgsFromCLI() CLIArgs {
 		logger.Debug("Include Repositories: ", includeRepositories)
 	}
 
+	if !dumpCSVs && resultsDirectoryPath != "" {
+		logger.Error("Cannot simultaneously set --results-directory-path and --dump-csvs=false")
+		logger.LogStackTraceAndExit(nil)
+	}
+
+	// set results directory if dumpCSVs is true
+	if resultsDirectoryPath == "" && dumpCSVs {
+		resultsDirectoryPath = time.Now().Format("20060102_150405") // Format: YYYYMMDD_HHMMSS
+	}
+	logger.Debug("Results Directory Path: ", resultsDirectoryPath)
+
 	args := CLIArgs{
-		LogLevel:            logLevel,
-		Mode:                mode,
-		LocalScanFilePath:   localScanFilePath,
-		AccessToken:         accessToken,
-		Organization:        organization,
-		IgnorePatterns:      ignorePatterns,
-		ExcludeRepositories: excludeRepositories,
-		IncludeRepositories: includeRepositories,
-		CloneRepoUsingZip:   cloneRepoUsingZip,
+		LogLevel:             logLevel,
+		Mode:                 mode,
+		LocalScanFilePath:    localScanFilePath,
+		AccessToken:          accessToken,
+		Organization:         organization,
+		IgnorePatterns:       ignorePatterns,
+		ExcludeRepositories:  excludeRepositories,
+		IncludeRepositories:  includeRepositories,
+		CloneRepoUsingZip:    cloneRepoUsingZip,
+		DumpCSVs:             dumpCSVs,
+		ResultsDirectoryPath: resultsDirectoryPath,
 	}
 
 	return args
