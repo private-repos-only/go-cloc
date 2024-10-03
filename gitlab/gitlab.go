@@ -9,7 +9,6 @@ import (
 	"net/http"
 )
 
-// https://gitlab.com/cole-gannaway-sonarsource/php-vulnerabilities.git
 func CreateCloneURLGitLab(accessToken string, organization string, respository string) string {
 	// Create the URL
 	return "https://oauth2:" + accessToken + "@gitlab.com/" + organization + "/" + respository + ".git"
@@ -18,8 +17,6 @@ func CreateCloneURLGitLab(accessToken string, organization string, respository s
 // Discovers projects in a GitLab organization
 func CreateDiscoverURLGitLab(accessToken string, organization string) string {
 	return "https://" + accessToken + "@gitlab.com/api/v4/groups/" + organization + "/projects?include_subgroups=true"
-	// https://gitlab.com/api/v4/groups/cole-gannaway-sonarsource/projects?include_subgroups=true
-
 }
 
 // Define the nested struct types
@@ -73,8 +70,3 @@ func DiscoverReposGitlab(organization string, accessToken string) []devops.RepoI
 	}
 	return repoNames
 }
-
-// func DiscoverReposBitbucket(organization string, accessToken string) []RepoInfo {
-// // repositories/%s/%s/?fields=size
-
-// }

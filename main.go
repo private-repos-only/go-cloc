@@ -56,8 +56,7 @@ func main() {
 	}
 
 	failedRepos := []devops.RepoInfo{}
-	csvFilePaths := []string{}
-
+	allRepoResults := []report.RepoTotal{}
 	// for each repo, clone and scan
 	for index, repoInfo := range repositoryInfoArr {
 		// set directory
@@ -120,12 +119,13 @@ func main() {
 		}
 
 		// Dump results by file in a csv
-		outputCSV_fullPath := filepath.Join(timeDir, repoInfo.Id+".csv")
-		logger.Debug("Dumping results to ", outputCSV_fullPath)
-		report.OutputCSV(resultsArr, outputCSV_fullPath)
+		outputCsvFilePath := filepath.Join(timeDir, repoInfo.Id+".csv")
+		logger.Debug("Dumping results to ", outputCsvFilePath)
+		codeLineCount := report.OutputCSV(resultsArr, outputCsvFilePath)
+		allRepoResults = append(allRepoResults, report.RepoTotal{RepositoryName: repoInfo.RepositoryName, Total: codeLineCount})
+
 		// TODO error checking
-		csvFilePaths = append(csvFilePaths, outputCSV_fullPath)
-		logger.Info("Done! Results for ", repoInfo.RepositoryName, " can be found ", outputCSV_fullPath)
+		logger.Info("Done! Results for ", repoInfo.RepositoryName, " can be found ", outputCsvFilePath)
 
 		if args.Mode == utilities.LOCAL {
 			// do not delete the directory
@@ -134,7 +134,7 @@ func main() {
 			logger.Debug("Deleting directory ", clonedRepoDir)
 			err := os.RemoveAll(clonedRepoDir)
 			if err != nil {
-				logger.Warn("Failed to remove directory: %v", err)
+				logger.Error("Failed to remove directory: ", clonedRepoDir)
 			}
 		}
 	}
@@ -155,20 +155,22 @@ func main() {
 		}
 	}
 
+	// count total LOC
 	totalLoc := 0
 	if args.Mode == utilities.LOCAL {
-		reportTotals := report.ParseTotalsFromCSVs(csvFilePaths)
-		totalLoc = reportTotals[0].Total
+		totalLoc = allRepoResults[0].Total
 	} else {
 		// combine csv reports
 		logger.Debug("Combining results...")
-		repoResults := report.ParseTotalsFromCSVs(csvFilePaths)
 		combinedReportsCSVFilePath := filepath.Join(timeDir, "AAA-combined-total-lines.csv")
-		totalLoc = report.OutputCombinedCSV(repoResults, combinedReportsCSVFilePath)
+		totalLoc = report.OutputCombinedCSV(allRepoResults, combinedReportsCSVFilePath)
 		logger.Info("Total LOC results can be found ", combinedReportsCSVFilePath)
 	}
 
 	logger.Info("Total LOC for ", args.Organization, " is ", totalLoc)
+
+	// return total LOC as exit code for external use
+	os.Exit(totalLoc)
 }
 
 func CloneRepoMain(mode string, accessToken string, organization string, repoInfo devops.RepoInfo) string {

@@ -2,7 +2,6 @@ package report
 
 import (
 	"encoding/csv"
-	"go-cloc/logger"
 	"go-cloc/scanner"
 	"log"
 	"os"
@@ -10,7 +9,14 @@ import (
 	"strconv"
 )
 
-func OutputCSV(inputArr []scanner.FileScanResults, outputFilePath string) {
+type RepoTotal struct {
+	RepositoryName string
+	Total          int
+}
+
+// OutputCSV writes the results of the scan to a CSV file
+// Returns the total number of lines of code for all files scanned
+func OutputCSV(inputArr []scanner.FileScanResults, outputFilePath string) int {
 
 	// Sort by CodeLineCount desc
 	sort.Slice(inputArr, func(a, b int) bool {
@@ -37,6 +43,8 @@ func OutputCSV(inputArr []scanner.FileScanResults, outputFilePath string) {
 
 	// Write to csv
 	writeCsv(outputFilePath, records)
+
+	return sumCodeLinesCount
 }
 
 // TODO return true or false
@@ -59,32 +67,6 @@ func writeCsv(outputFilePath string, records [][]string) {
 	}
 }
 
-type RepoTotal struct {
-	RepositoryName string
-	Total          int
-}
-
-func ParseTotalsFromCSVs(csvFilePaths []string) []RepoTotal {
-	repoResults := []RepoTotal{}
-	for _, csvFilePath := range csvFilePaths {
-		// read total line
-		total := GetTotalFromCSV(csvFilePath)
-		// convert it to an int
-		// TODO make this the repository name instead of the CSV
-		repoResult := RepoTotal{
-			RepositoryName: csvFilePath,
-			Total:          total,
-		}
-		repoResults = append(repoResults, repoResult)
-	}
-	// Sort by total
-	sort.Slice(repoResults, func(a, b int) bool {
-		return repoResults[a].Total > repoResults[b].Total
-	})
-
-	return repoResults
-}
-
 func OutputCombinedCSV(repoResults []RepoTotal, outputFilePath string) int {
 	// Create CSV information
 	records := [][]string{
@@ -104,43 +86,4 @@ func OutputCombinedCSV(repoResults []RepoTotal, outputFilePath string) int {
 	// Write to csv
 	writeCsv(outputFilePath, records)
 	return sum
-}
-
-func GetTotalFromCSV(csvFilePath string) int {
-	// Open the CSV file
-	file, err := os.Open(csvFilePath)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer file.Close()
-
-	// Create a new CSV reader
-	reader := csv.NewReader(file)
-
-	var lastLine []string
-
-	// Iterate through all the lines in the CSV
-	for {
-		record, err := reader.Read()
-		if err != nil {
-			if err.Error() == "EOF" { // End of file, stop reading
-				break
-			}
-			log.Fatal(err)
-		}
-		lastLine = record // Keep track of the last read line
-	}
-
-	// Print the last line
-	if len(lastLine) > 3 {
-		// Convert the string at index 3 to an integer
-		value, err := strconv.Atoi(lastLine[3])
-		if err != nil {
-			logger.Error("Error converting index 3 to an integer:", err)
-			return 0
-		}
-		return value
-	}
-	// Error
-	return 0
 }
