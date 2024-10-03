@@ -44,8 +44,8 @@ func ParseArgsFromCLI() CLIArgs {
 	excludeRepositoriesFilePathArg := flag.String("exclude-repositories-file", "", "(Optional) Path to your exclude repositories file to exclude repositories. Please see the README.md for how to format your exclude repositories configuration")
 	includeRepositoriesFilePathArg := flag.String("include-repositories-file", "", "(Optional) Path to your include repositories file to include repositories. Please see the README.md for how to format your include repositories configuration")
 	cloneRepoUsingZipArg := flag.Bool("clone-repo-using-zip", false, "(Optional) Flag to clone repositories using zip files instead of git clone for performance improvements")
-	dumpCSVsArg := flag.Bool("dump-csvs", true, "(Optional) Flag to dump CSV files for each repository scanned. Default is true, but can be set to false to disable CSV dumps")
-	resultsDirectoryPathArg := flag.String("results-directory-path", "", "(Optional) Path to the directory where you want to store the results. Default the tool will create one with a timestamp")
+	dumpCSVsArg := flag.Bool("dump-csvs", true, "(Optional) Flag to output CSV files. Default is true, but can be set to false to disable file dumps")
+	resultsDirectoryPathArg := flag.String("results-directory-path", "", "(Optional) Path to a new directory for storing the results. By default the tool will create one")
 
 	// parse the CLI arguments
 	flag.Parse()

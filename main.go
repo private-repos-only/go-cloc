@@ -93,7 +93,8 @@ func main() {
 			// print status
 			logger.Info((index + 1), "/", len(fitleredRepoInfoArr), " cloning respository ", repoInfo.RepositoryName, "...")
 
-			if args.CloneRepoUsingZip {
+			// TODO: add support for cloning using zip for more platforms
+			if args.CloneRepoUsingZip && args.Mode == utilities.GITHUB {
 				logger.Debug("Cloning using zip")
 
 				// clone repo
