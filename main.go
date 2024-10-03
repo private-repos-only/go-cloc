@@ -101,20 +101,22 @@ func main() {
 				clonedRepoDir = clone.DonwloadAndUnzip(zipUrl, repoInfo.RepositoryName, args.AccessToken)
 				if clonedRepoDir == "" {
 					// Failed to clone repo, save metadata for later reporting
-					// TODO dump this to CSV
 					failedRepos = append(failedRepos, repoInfo)
+					logger.Error("Failed to clone repo ", repoInfo.RepositoryName)
+					// skip to the next repo
 					continue
 				}
 			} else {
 				logger.Debug("Cloning using git clone")
 				// clone repo
-				clonedRepoDir = CloneRepoMain(args.Mode, args.AccessToken, args.Organization, repoInfo)
+				clonedRepoDir = CloneRepo(args.Mode, args.AccessToken, args.Organization, repoInfo)
 
 				// Handle failed repos
 				if clonedRepoDir == "" {
 					// Failed to clone repo, save metadata for later reporting
-					// TODO dump this to CSV
 					failedRepos = append(failedRepos, repoInfo)
+					logger.Error("Failed to clone repo ", repoInfo.RepositoryName)
+					// skip to the next repo
 					continue
 				}
 			}
@@ -183,7 +185,7 @@ func main() {
 	os.Exit(totalLoc)
 }
 
-func CloneRepoMain(mode string, accessToken string, organization string, repoInfo devops.RepoInfo) string {
+func CloneRepo(mode string, accessToken string, organization string, repoInfo devops.RepoInfo) string {
 	cloneRepoUrl := ""
 	clonedRepoDir := ""
 	if mode == utilities.GITHUB {
