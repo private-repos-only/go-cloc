@@ -71,7 +71,7 @@ The tool will return an exit code of the total lines of code (LOC) count if succ
 
 The ignore file is a simple text file used to exclude certain directories and files from processing. You can use a wildcard (`*`) to match patterns, similar to regular expressions. However, you can only use one `*` wildcard at a time. Make sure to place your ignore patterns in the ignore file, one per line, to apply them effectively.
 
-This same configuration format applies to **exclude** or **include** repositories using the **devops** flag
+This same configuration format applies to **exclude** or **include** repositories using the **devops** flag. Note: if using the `--devops` flag, these patterns will apply to all repositories.
 
 - To ignore all files in a specific directory:
 
@@ -103,4 +103,37 @@ $ ./go-cloc --devops GitHub \
       --include-repositories-file github_repos_to_include.txt
 ```
 
-\* Note that if using the --devops flag, these patterns will apply to all repositories.
+## Personal Access Tokens
+
+Personal Access Tokens (PATs) are used to authenticate and authorize access to your DevOps platform. They are necessary for the tool to discover and clone repositories within your organization. Below are the steps to generate a PAT for different DevOps platforms:
+
+### GitHub
+1. Navigate to [GitHub Settings](https://github.com/settings/tokens).
+2. Click on **Generate new token**.
+3. For better security, it is recommended to use fine-grained access tokens. Under **Repository access**, select **All repositories** and under **Permissions**, set **Contents** to **Read-only**.
+4. Select the scopes or permissions you'd like to grant this token. For repository access, select `repo`.
+5. Click **Generate token** and copy the token for use.
+
+### Azure DevOps
+1. Navigate to [Azure DevOps](https://dev.azure.com).
+2. Click on **User Settings** and select **Personal Access Token**.
+3. Click on **New Token**.
+4. Set the name, organization, and scopes for the token.
+5. Ensure that **Code -> Read** is selected as a scope.
+6. Click **Create** and copy the token for use.
+
+### GitLab
+1. Navigate to [GitLab](https://gitlab.com).
+2. Select your **Organization**.
+3. Click on **Settings** in the left sidebar and select **Access Tokens**.
+4. Provide a name and expiration date for the token.
+5. Select the scopes `read_api` and `read_repository` to grant the necessary permissions.
+6. Click **Create personal access token** and copy the token for use.
+
+### Bitbucket
+1. Navigate to [Bitbucket](https://bitbucket.org).
+2. Select your **Organization**.
+3. In the left sidebar and select **Access Tokens**.
+4. Provide a name and expiration date for the token.
+5. Select the scopes **Repository** to **Read**.to grant the necessary permissions.
+6. Click **Create** and copy the token for use.
