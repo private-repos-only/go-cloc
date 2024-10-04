@@ -15,12 +15,20 @@ type item struct {
 	Name string `json:"name"`
 }
 
+type repo struct {
+	DefaultBranch string `json:"default_branch"`
+}
+
 func CreateCloneURLGithub(accessToken string, organization string, repoName string) string {
 	return "https://oauth2:" + accessToken + "@github.com/" + organization + "/" + repoName + ".git"
 }
 
-func CreateZipURLGithub(organization string, repoName string) string {
-	return "https://api.github.com/repos/" + organization + "/" + repoName + "/zipball"
+func CreateZipURLGithub(organization string, repoName string, defaultBranch string) string {
+	return "https://api.github.com/repos/" + organization + "/" + repoName + "/zipball/" + defaultBranch
+}
+
+func CreateGetDefaultBranchURLGitHub(organization string, repoName string) string {
+	return "https://api.github.com/repos/" + organization + "/" + repoName
 }
 
 func CreateDiscoverURLGitHub(organization string, pageNum int, pageSize int) string {
@@ -71,8 +79,7 @@ func DiscoverReposGithub(organization string, accessToken string) []devops.RepoI
 		}
 
 		// Print the parsed data
-		logger.Debug("Parsed JSON: ")
-		logger.Debug(result)
+		logger.Debug("Default branch is: ", result)
 
 		for _, item := range result {
 			repoInfo := devops.NewRepoInfo(organization, "", item.Name)
@@ -90,4 +97,49 @@ func DiscoverReposGithub(organization string, accessToken string) []devops.RepoI
 	}
 
 	return repoNames
+}
+
+func DiscoverDefaultBranchForRepoGithub(organization string, repoName string, accessToken string) string {
+	logger.Debug("Getting default branch for ", organization, "/", repoName)
+
+	url := CreateGetDefaultBranchURLGitHub(organization, repoName)
+	logger.Debug("GET: " + url)
+	logger.Debug("Using access token: " + accessToken)
+
+	// Create a new HTTP request
+	req, _ := http.NewRequest("GET", url, nil)
+	req.Header.Set("Authorization", "Bearer "+accessToken)
+
+	// Perform the request using the default HTTP client
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		logger.LogStackTraceAndExit(err)
+	}
+	defer resp.Body.Close()
+
+	// Read the response body
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		logger.Error("Failed to read response body: ", body)
+		logger.LogStackTraceAndExit(err)
+	}
+
+	// Check if the status code is 200
+	if resp.StatusCode != http.StatusOK {
+		logger.Error("Response status code: ", resp.StatusCode, " expected 200")
+		logger.LogStackTraceAndExit(nil)
+	}
+
+	// Parse the JSON response into a slice of Item
+	var repoResult repo
+	if err := json.Unmarshal(body, &repoResult); err != nil {
+		logger.Error("Failed to parse JSON: ", err)
+		logger.LogStackTraceAndExit(err)
+	}
+
+	// Print the parsed data
+	logger.Debug("Default branch is: ", repoResult.DefaultBranch)
+
+	return repoResult.DefaultBranch
 }

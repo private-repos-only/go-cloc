@@ -94,7 +94,6 @@ func DonwloadAndUnzip(getUrl string, repoName string, accessToken string) string
 	// Check if the status code is 200
 	if resp.StatusCode != http.StatusOK {
 		logger.Error(resp.Status, " ", resp.StatusCode, " ", resp.Body)
-		logger.LogStackTraceAndExit(err)
 		return ""
 	}
 
@@ -112,11 +111,7 @@ func DonwloadAndUnzip(getUrl string, repoName string, accessToken string) string
 	}
 
 	// unzip the file
-	// TODO check for errors here
-	err = UnzipAndRename(zipFilePath, "", repoName)
-	if err != nil {
-		logger.LogStackTraceAndExit(err)
-	}
+	UnzipAndRename(zipFilePath, "", repoName)
 	logger.Debug("File unzipped successfully!")
 
 	// remove the zip file

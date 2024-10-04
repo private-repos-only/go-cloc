@@ -98,7 +98,8 @@ func main() {
 				logger.Debug("Cloning using zip")
 
 				// clone repo
-				zipUrl := github.CreateZipURLGithub(repoInfo.OrganizationName, repoInfo.RepositoryName)
+				defaultBranch := github.DiscoverDefaultBranchForRepoGithub(repoInfo.OrganizationName, repoInfo.RepositoryName, args.AccessToken)
+				zipUrl := github.CreateZipURLGithub(repoInfo.OrganizationName, repoInfo.RepositoryName, defaultBranch)
 				clonedRepoDir = clone.DonwloadAndUnzip(zipUrl, repoInfo.RepositoryName, args.AccessToken)
 				if clonedRepoDir == "" {
 					// Failed to clone repo, save metadata for later reporting
