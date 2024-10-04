@@ -32,28 +32,28 @@ This will output the total Lines of Code (LOC) count for the entire organization
 ```sh
 prompt> ./go-cloc --help
 ```
-- `-accessToken string`
-      - Your DevOps personal access token used for discovering and downloading repositories in your organization
-- `-clone-repo-using-zip`
-      - (Optional) Flag to clone repositories using zip files instead of git clone for performance improvements
-- `-devops string`
-      - flag : `<GitHub>||<AzureDevOps>||<Bitbucket>||<GitLab>||<File>` (default "Local")
-- `-dump-csvs`
-      - (Optional) Flag to output CSV files. Default is true, but can be set to false to disable file dumps
-- `-exclude-repositories-file string`
-      - (Optional) Path to your exclude repositories file to exclude repositories. Please see the README.md for how to format your exclude repositories configuration
-- `-ignore-file string`
-      - (Optional) Path to your ignore file to exclude directories and files. Please see the README.md for how to format your ignore configuration
-- `-include-repositories-file string`
-      - (Optional) Path to your include repositories file to include repositories. Please see the README.md for how to format your include repositories configuration
-- `-local-file-path string`
-      - Path to your local file or directory that you want to scan
-- `-log-level string`
-      - Log level (DEBUG, INFO, WARN, ERROR) (default "INFO")
-- `-organization string`
-      - Your DevOps organization name
-- `-results-directory-path string`
-      - (Optional) Path to a new directory for storing the results. By default the tool will create one
+-  `-accessToken`
+       Your DevOps personal access token used for discovering and downloading repositories in your organization
+-  `-clone-repo-using-zip`
+       (Optional) Flag to clone repositories using zip files instead of git clone for faster downloads. Default is false. For Github, a fine-grained token is required for private repositories
+-  `-devops`
+       flag : <GitHub>||<AzureDevOps>||<Bitbucket>||<GitLab>||<File> (default "Local")
+-  `-dump-csvs`
+       (Optional) Flag to output CSV files. Default is true, but can be set to false to disable file dumps (default true)
+-  `-exclude-repositories-file`
+       (Optional) Path to your exclude repositories file to exclude repositories. Please see the README.md for how to format your exclude repositories configuration
+-  `-ignore-file`
+       (Optional) Path to your ignore file to exclude directories and files. Please see the README.md for how to format your ignore configuration
+-  `-include-repositories-file`
+       (Optional) Path to your include repositories file to include repositories. Please see the README.md for how to format your include repositories configuration
+-  `-local-file-path`
+       Path to your local file or directory that you want to scan
+-  `-log-level`
+       Log level (DEBUG, INFO, WARN, ERROR) (default "INFO")
+-  `-organization`
+       Your DevOps organization name
+-  `-results-directory-path`
+       (Optional) Path to a new directory for storing the results. By default the tool will create one
 
 ## Examples
 Github

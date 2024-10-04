@@ -43,7 +43,7 @@ func ParseArgsFromCLI() CLIArgs {
 	ignoreFilePathArg := flag.String("ignore-file", "", "(Optional) Path to your ignore file to exclude directories and files. Please see the README.md for how to format your ignore configuration")
 	excludeRepositoriesFilePathArg := flag.String("exclude-repositories-file", "", "(Optional) Path to your exclude repositories file to exclude repositories. Please see the README.md for how to format your exclude repositories configuration")
 	includeRepositoriesFilePathArg := flag.String("include-repositories-file", "", "(Optional) Path to your include repositories file to include repositories. Please see the README.md for how to format your include repositories configuration")
-	cloneRepoUsingZipArg := flag.Bool("clone-repo-using-zip", false, "(Optional) Flag to clone repositories using zip files instead of git clone for performance improvements")
+	cloneRepoUsingZipArg := flag.Bool("clone-repo-using-zip", false, "(Optional) Flag to clone repositories using zip files instead of git clone for faster downloads. Default is false. For Github, a fine-grained token is required for private repositories")
 	dumpCSVsArg := flag.Bool("dump-csvs", true, "(Optional) Flag to output CSV files. Default is true, but can be set to false to disable file dumps")
 	resultsDirectoryPathArg := flag.String("results-directory-path", "", "(Optional) Path to a new directory for storing the results. By default the tool will create one")
 
