@@ -29,9 +29,12 @@ func UnzipAndRename(src string, dest string, newFolderName string) error {
 		// Get the file's path within the archive
 		fpath := f.Name
 
+		// Normalize the path to use forward slashes
+		fpath = strings.ReplaceAll(fpath, "\\", "/")
+
 		// Identify the base directory (i.e., the top-level folder)
 		if baseDir == "" {
-			parts := strings.Split(fpath, string(os.PathSeparator))
+			parts := strings.Split(fpath, "/")
 			baseDir = parts[0] // the first part is the top-level folder
 		}
 
@@ -91,6 +94,7 @@ func DonwloadAndUnzip(getUrl string, repoName string, accessToken string) string
 	// Check if the status code is 200
 	if resp.StatusCode != http.StatusOK {
 		logger.Error(resp.Status, " ", resp.StatusCode, " ", resp.Body)
+		logger.LogStackTraceAndExit(err)
 		return ""
 	}
 
@@ -109,7 +113,10 @@ func DonwloadAndUnzip(getUrl string, repoName string, accessToken string) string
 
 	// unzip the file
 	// TODO check for errors here
-	UnzipAndRename(zipFilePath, "", repoName)
+	err = UnzipAndRename(zipFilePath, "", repoName)
+	if err != nil {
+		logger.LogStackTraceAndExit(err)
+	}
 	logger.Debug("File unzipped successfully!")
 
 	// remove the zip file
