@@ -70,7 +70,7 @@ func writeCsv(outputFilePath string, records [][]string) {
 func OutputCombinedCSV(repoResults []RepoTotal, outputFilePath string) int {
 	// Create CSV information
 	records := [][]string{
-		{"filePath", "code"},
+		{"repository", "lineOfCodeCount"},
 	}
 	sum := 0
 	for _, repoResult := range repoResults {
