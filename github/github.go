@@ -44,7 +44,6 @@ func DiscoverReposGithub(organization string, accessToken string) []devops.RepoI
 	for pageNum != -1 {
 		apiURL := CreateDiscoverURLGitHub(organization, pageNum, pageSize)
 		logger.Debug("GET: " + apiURL)
-		logger.Debug("Using access token: " + accessToken)
 
 		// Create a new HTTP request
 		req, _ := http.NewRequest("GET", apiURL, nil)
@@ -104,7 +103,6 @@ func DiscoverDefaultBranchForRepoGithub(organization string, repoName string, ac
 
 	url := CreateGetDefaultBranchURLGitHub(organization, repoName)
 	logger.Debug("GET: " + url)
-	logger.Debug("Using access token: " + accessToken)
 
 	// Create a new HTTP request
 	req, _ := http.NewRequest("GET", url, nil)

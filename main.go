@@ -196,7 +196,6 @@ func CloneRepo(mode string, accessToken string, organization string, repoInfo de
 
 	} else if mode == utilities.AZUREDEVOPS {
 		cloneRepoUrl = azuredevops.CreateCloneURLAzureDevOps(accessToken, organization, repoInfo.ProjectName, repoInfo.RepositoryName)
-		// cloneRepoUrl = clone.CloneRepoAzureDevOps(accessToken, repoInfo.OrganizationName, repoInfo.ProjectName, repoInfo.RepositoryName)
 		clonedRepoDir = clone.CloneRepoAzureDevOps(cloneRepoUrl, accessToken, repoInfo.RepositoryName)
 	} else if mode == utilities.GITLAB {
 		cloneRepoUrl = gitlab.CreateCloneURLGitLab(accessToken, organization, repoInfo.RepositoryName)
