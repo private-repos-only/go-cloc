@@ -88,7 +88,8 @@ func DiscoverReposGithub(organization string, accessToken string) []devops.RepoI
 		// Get the next page URL
 		link := resp.Header.Get("Link")
 		logger.Debug("Link header: ", link)
-		if link == "" || !strings.Contains(link, `rel="last"`) {
+		// If there is no next page, stop the loop
+		if link == "" || !strings.Contains(link, `rel="next"`) {
 			pageNum = -1
 		} else {
 			pageNum = pageNum + 1

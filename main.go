@@ -200,6 +200,9 @@ func CloneRepo(mode string, accessToken string, organization string, repoInfo de
 	} else if mode == utilities.GITLAB {
 		cloneRepoUrl = gitlab.CreateCloneURLGitLab(accessToken, organization, repoInfo.RepositoryName)
 		clonedRepoDir = clone.CloneRepo(cloneRepoUrl, accessToken, repoInfo.RepositoryName)
+	} else if mode == utilities.BITBUCKET {
+		cloneRepoUrl = bitbucket.CreateCloneURLBitbucket(accessToken, organization, repoInfo.RepositoryName)
+		clonedRepoDir = clone.CloneRepo(cloneRepoUrl, accessToken, repoInfo.RepositoryName)
 	} else {
 		logger.Error("Mode ", mode, " is not supported")
 	}
