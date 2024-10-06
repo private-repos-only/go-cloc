@@ -5,12 +5,13 @@ type RepoInfo struct {
 	RepositoryName   string
 	OrganizationName string
 	ProjectName      string
+	DefaultBranch    string
 }
 
 /*
 * Constructor for RepoInfo
  */
-func NewRepoInfo(organization string, project string, repositoryName string) RepoInfo {
+func NewRepoInfo(organization string, project string, repositoryName string, defaultBranch string) RepoInfo {
 	repoInfo := RepoInfo{}
 	// Github does not have a concept of projects
 	if project == "" {
@@ -21,5 +22,6 @@ func NewRepoInfo(organization string, project string, repositoryName string) Rep
 	repoInfo.ProjectName = project
 	repoInfo.OrganizationName = organization
 	repoInfo.RepositoryName = repositoryName
+	repoInfo.DefaultBranch = defaultBranch
 	return repoInfo
 }

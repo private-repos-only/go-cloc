@@ -212,7 +212,7 @@ func CloneRepo(mode string, accessToken string, organization string, repoInfo de
 func DiscoverRepositories(mode string, accessToken string, organization string) []devops.RepoInfo {
 	repositoryInfoArr := []devops.RepoInfo{}
 	if mode == utilities.LOCAL {
-		repositoryInfo := devops.NewRepoInfo("local-org", "", "local")
+		repositoryInfo := devops.NewRepoInfo("local-org", "", "local", "")
 		repositoryInfoArr = append(repositoryInfoArr, repositoryInfo)
 	} else if mode == utilities.GITHUB {
 		repositoryInfoArr = github.DiscoverReposGithub(organization, accessToken)

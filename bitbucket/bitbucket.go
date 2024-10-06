@@ -81,7 +81,7 @@ func DiscoverReposBitbucket(organization string, accessToken string) []devops.Re
 		logger.Debug("Response: ", r)
 
 		for _, item := range r.Value {
-			repoInfo := devops.NewRepoInfo(organization, item.Project.Name, item.Name)
+			repoInfo := devops.NewRepoInfo(organization, item.Project.Name, item.Name, "")
 			repoNames = append(repoNames, repoInfo)
 		}
 		// If there is no next page, stop the loop

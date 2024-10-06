@@ -21,9 +21,14 @@ func CreateDiscoverURLGitLab(accessToken string, organization string, pageNum in
 	return "https://" + accessToken + "@gitlab.com/api/v4/groups/" + organization + "/projects?per_page=" + strconv.Itoa(pageSize) + "&page=" + strconv.Itoa(pageNum)
 }
 
+func CreateZipURLGitLab(accessToken string, organization string, repoName string, defaultBranch string) string {
+	return "https://" + accessToken + "@gitlab.com/" + organization + "/" + repoName + "/-/archive/" + defaultBranch + "/" + repoName + "-" + defaultBranch + ".zip"
+}
+
 // Define the nested struct types
 type item struct {
-	Name string `json:"name"`
+	Name          string `json:"name"`
+	DefaultBranch string `json:"default_branch"`
 }
 
 func DiscoverReposGitlab(organization string, accessToken string) []devops.RepoInfo {
@@ -71,7 +76,7 @@ func DiscoverReposGitlab(organization string, accessToken string) []devops.RepoI
 
 		// Print the parsed data
 		for _, item := range result {
-			repoInfo := devops.NewRepoInfo(organization, "", item.Name)
+			repoInfo := devops.NewRepoInfo(organization, "", item.Name, item.DefaultBranch)
 			repoNames = append(repoNames, repoInfo)
 		}
 

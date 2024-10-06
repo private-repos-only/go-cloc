@@ -107,7 +107,7 @@ func DiscoverReposAzureDevOps(organization string, accessToken string) []devops.
 		}
 		for _, item := range r.Value {
 			repoName := item.Name
-			repoInfo := devops.NewRepoInfo(organization, projectName, repoName)
+			repoInfo := devops.NewRepoInfo(organization, projectName, repoName, "")
 			repoNames = append(repoNames, repoInfo)
 		}
 	}

@@ -12,7 +12,8 @@ import (
 
 // Define a struct with only the fields you care about
 type item struct {
-	Name string `json:"name"`
+	Name          string `json:"name"`
+	DefaultBranch string `json:"default_branch"`
 }
 
 type repo struct {
@@ -81,7 +82,7 @@ func DiscoverReposGithub(organization string, accessToken string) []devops.RepoI
 		logger.Debug("Default branch is: ", result)
 
 		for _, item := range result {
-			repoInfo := devops.NewRepoInfo(organization, "", item.Name)
+			repoInfo := devops.NewRepoInfo(organization, "", item.Name, item.DefaultBranch)
 			repoNames = append(repoNames, repoInfo)
 		}
 
