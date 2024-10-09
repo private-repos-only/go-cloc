@@ -26,11 +26,8 @@ jobs:
       - name: Build Go project
         run: go build -o go-cloc.exe ./main.go
 
-      - name: Add binary to PATH
-        run: echo "::add-path::$(pwd)"
-
       - name: Run integration tests
-        run: python integration-tests.py ./go-cloc.exe
+        run: python integration-tests.py --go_cloc_path=./go-cloc.exe
 
   build-and-test-linux:
     runs-on: ubuntu-latest
@@ -51,11 +48,8 @@ jobs:
       - name: Build Go project
         run: go build -o go-cloc ./main.go
 
-      - name: Add binary to PATH
-        run: echo "::add-path::$(pwd)"
-
       - name: Run integration tests
-        run: python3 integration-tests.py ./go-cloc
+        run: python3 integration-tests.py --go_cloc_path=./go-cloc
 
   build-and-test-macos:
     runs-on: macos-latest
@@ -76,8 +70,5 @@ jobs:
       - name: Build Go project
         run: go build -o go-cloc ./main.go
 
-      - name: Add binary to PATH
-        run: echo "::add-path::$(pwd)"
-
       - name: Run integration tests
-        run: python3 integration-tests.py ./go-cloc
+        run: python3 integration-tests.py --go_cloc_path=./go-cloc
