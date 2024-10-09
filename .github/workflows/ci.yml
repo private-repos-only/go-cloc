@@ -47,6 +47,15 @@ jobs:
 
       - name: Run integration tests
         run: python integration-tests.py --go_cloc_path=./go-cloc.exe
+        env:
+          GITHUB_ORGANIZATION: ${{ secrets.GO_CLOC_GITHUB_ORGANIZATION }}
+          GITHUB_ACCESS_TOKEN: ${{ secrets.GO_CLOC_GITHUB_ACCESS_TOKEN }}
+          AZURE_DEVOPS_ORGANIZATION: ${{ secrets.GO_CLOC_AZURE_DEVOPS_ORGANIZATION }}
+          AZURE_DEVOPS_ACCESS_TOKEN: ${{ secrets.GO_CLOC_AZURE_DEVOPS_ACCESS_TOKEN }}
+          GITLAB_ORGANIZATION: ${{ secrets.GO_CLOC_GITLAB_ORGANIZATION }}
+          GITLAB_ACCESS_TOKEN: ${{ secrets.GO_CLOC_GITLAB_ACCESS_TOKEN }}
+          BITBUCKET_ORGANIZATION: ${{ secrets.GO_CLOC_BITBUCKET_ORGANIZATION }}
+          BITBUCKET_ACCESS_TOKEN: ${{ secrets.GO_CLOC_BITBUCKET_ACCESS_TOKEN }}
 
   build-and-test-linux:
     runs-on: ubuntu-latest
@@ -69,6 +78,15 @@ jobs:
 
       - name: Run integration tests
         run: python3 integration-tests.py --go_cloc_path=./go-cloc
+        env:
+          GITHUB_ORGANIZATION: ${{ secrets.GO_CLOC_GITHUB_ORGANIZATION }}
+          GITHUB_ACCESS_TOKEN: ${{ secrets.GO_CLOC_GITHUB_ACCESS_TOKEN }}
+          AZURE_DEVOPS_ORGANIZATION: ${{ secrets.GO_CLOC_AZURE_DEVOPS_ORGANIZATION }}
+          AZURE_DEVOPS_ACCESS_TOKEN: ${{ secrets.GO_CLOC_AZURE_DEVOPS_ACCESS_TOKEN }}
+          GITLAB_ORGANIZATION: ${{ secrets.GO_CLOC_GITLAB_ORGANIZATION }}
+          GITLAB_ACCESS_TOKEN: ${{ secrets.GO_CLOC_GITLAB_ACCESS_TOKEN }}
+          BITBUCKET_ORGANIZATION: ${{ secrets.GO_CLOC_BITBUCKET_ORGANIZATION }}
+          BITBUCKET_ACCESS_TOKEN: ${{ secrets.GO_CLOC_BITBUCKET_ACCESS_TOKEN }}
 
   build-and-test-macos:
     runs-on: macos-latest
@@ -91,3 +109,12 @@ jobs:
 
       - name: Run integration tests
         run: python3 integration-tests.py --go_cloc_path=./go-cloc
+        env:
+          GITHUB_ORGANIZATION: ${{ secrets.GO_CLOC_GITHUB_ORGANIZATION }}
+          GITHUB_ACCESS_TOKEN: ${{ secrets.GO_CLOC_GITHUB_ACCESS_TOKEN }}
+          AZURE_DEVOPS_ORGANIZATION: ${{ secrets.GO_CLOC_AZURE_DEVOPS_ORGANIZATION }}
+          AZURE_DEVOPS_ACCESS_TOKEN: ${{ secrets.GO_CLOC_AZURE_DEVOPS_ACCESS_TOKEN }}
+          GITLAB_ORGANIZATION: ${{ secrets.GO_CLOC_GITLAB_ORGANIZATION }}
+          GITLAB_ACCESS_TOKEN: ${{ secrets.GO_CLOC_GITLAB_ACCESS_TOKEN }}
+          BITBUCKET_ORGANIZATION: ${{ secrets.GO_CLOC_BITBUCKET_ORGANIZATION }}
+          BITBUCKET_ACCESS_TOKEN: ${{ secrets.GO_CLOC_BITBUCKET_ACCESS_TOKEN }}
