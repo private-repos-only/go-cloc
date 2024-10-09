@@ -1,8 +1,7 @@
 import os
-import platform
 import subprocess
 import sys
-import shutil
+import argparse
 
 GITHUB_ORGANIZATION = os.getenv('GO_CLOC_GITHUB_ORGANIZATION')
 GITHUB_ACCESS_TOKEN = os.getenv('GO_CLOC_GITHUB_ACCESS_TOKEN')
@@ -13,26 +12,10 @@ GITLAB_ACCESS_TOKEN = os.getenv('GO_CLOC_GITLAB_ACCESS_TOKEN')
 BITBUCKET_ORGANIZATION = os.getenv('GO_CLOC_BITBUCKET_ORGANIZATION')
 BITBUCKET_ACCESS_TOKEN = os.getenv('GO_CLOC_BITBUCKET_ACCESS_TOKEN')
 
-def execute_go_cloc(args):
-    os_name = platform.system()
-
-    # Set the binary path based on the operating system
-    if os_name == "Linux" or os_name == "Darwin":
-        binary_name = "go-cloc"
-    elif os_name == "Windows":
-        binary_name = "go-cloc.exe"
-    else:
-        print(f"Unsupported OS: {os_name}")
-        sys.exit(1)
-    
-    # Verify that the binary is in the PATH
-    binary_path = shutil.which(binary_name)
-    if binary_path is None:
-        print(f"Error: {binary_name} not found in PATH.")
-        sys.exit(1)
+def execute_go_cloc(go_cloc_path, args):
     
     # Collect all command-line arguments passed to the script
-    args = [binary_path] + args
+    args = [go_cloc_path] + args
 
      # Run the binary with the provided arguments and capture the output
     try:
@@ -59,9 +42,9 @@ def execute_go_cloc(args):
         sys.exit(e.returncode)
     
     
-def run_test(name,args,expected):
+def run_test(name,go_cloc_path,args,expected):
     print(f"--------Running test: {name}---------")
-    result = execute_go_cloc(args)
+    result = execute_go_cloc(go_cloc_path, args)
     did_pass = (result == expected)
     return {
         "name": name,
@@ -81,20 +64,32 @@ def print_test_results(test_results):
     return did_all_pass
 
 if __name__ == "__main__":
+    # parse the command-line arguments
+    parser = argparse.ArgumentParser(description="Script to take in paths to certain binaries.")
+    
+    # Add arguments for the paths to the binaries
+    parser.add_argument('--go_cloc_path', type=str, required=True, help='Path to the go-cloc binary')
+    
+    # Parse the arguments
+    args = parser.parse_args()
+    go_cloc_path = args.go_cloc_path
+    
+    # Print the parsed arguments
+    print(f"Path to the go-cloc binary: {go_cloc_path}")
 
     # Run the tests
     test_results = []
     test_results.append(
-        run_test(name="GitHub", expected=143933,args=["--devops","GitHub","--organization",GITHUB_ORGANIZATION,"--accessToken",GITHUB_ACCESS_TOKEN,"--log-level","DEBUG","--dump-csvs=false"])
+        run_test(name="GitHub", expected=143933,go_cloc_path=go_cloc_path,args=["--devops","GitHub","--organization",GITHUB_ORGANIZATION,"--accessToken",GITHUB_ACCESS_TOKEN,"--log-level","DEBUG","--dump-csvs=false"])
     )
     test_results.append(
-        run_test(name="AzureDevOps", expected=57888,args=["--devops","AzureDevOps","--organization",AZURE_DEVOPS_ORGANIZATION,"--accessToken",AZURE_DEVOPS_ACCESS_TOKEN,"--log-level","DEBUG","--dump-csvs=false"])
+        run_test(name="AzureDevOps", expected=57888,go_cloc_path=go_cloc_path,args=["--devops","AzureDevOps","--organization",AZURE_DEVOPS_ORGANIZATION,"--accessToken",AZURE_DEVOPS_ACCESS_TOKEN,"--log-level","DEBUG","--dump-csvs=false"])
     )
     test_results.append(
-        run_test(name="GitLab", expected=162,args=["--devops","GitLab","--organization",GITLAB_ORGANIZATION,"--accessToken",GITLAB_ACCESS_TOKEN,"--log-level","DEBUG","--dump-csvs=false"])
+        run_test(name="GitLab", expected=162,go_cloc_path=go_cloc_path,args=["--devops","GitLab","--organization",GITLAB_ORGANIZATION,"--accessToken",GITLAB_ACCESS_TOKEN,"--log-level","DEBUG","--dump-csvs=false"])
     )
     test_results.append(
-        run_test(name="Bitbucket", expected=4317,args=["--devops","Bitbucket","--organization",BITBUCKET_ORGANIZATION,"--accessToken",BITBUCKET_ACCESS_TOKEN,"--log-level","DEBUG","--dump-csvs=false"])
+        run_test(name="Bitbucket", expected=4317,go_cloc_path=go_cloc_path,args=["--devops","Bitbucket","--organization",BITBUCKET_ORGANIZATION,"--accessToken",BITBUCKET_ACCESS_TOKEN,"--log-level","DEBUG","--dump-csvs=false"])
     )
 
     did_all_pass = print_test_results(test_results)
