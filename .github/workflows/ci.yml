@@ -43,10 +43,10 @@ jobs:
           python-version: '3.x'
 
       - name: Build Go project
-        run: go build -o go-cloc.exe ./main.go
+        run: go build -o go-cloc.exe main.go
 
       - name: Run integration tests
-        run: python integration-tests.py --go_cloc_path=./go-cloc.exe
+        run: python integration-tests.py --go_cloc_path=go-cloc.exe
         env:
           GO_CLOC_GITHUB_ORGANIZATION: ${{ secrets.GO_CLOC_GITHUB_ORGANIZATION }}
           GO_CLOC_GITHUB_ACCESS_TOKEN: ${{ secrets.GO_CLOC_GITHUB_ACCESS_TOKEN }}
