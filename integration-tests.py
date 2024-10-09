@@ -78,16 +78,16 @@ if __name__ == "__main__":
     # Run the tests
     test_results = []
     test_results.append(
-        run_test(name="GitHub", expected=143933,go_cloc_path=go_cloc_path,args=["--devops","GitHub","--organization",GITHUB_ORGANIZATION,"--accessToken",GITHUB_ACCESS_TOKEN,"--log-level","DEBUG","--dump-csvs=false"])
+        run_test(name="GitHub", expected=143933,go_cloc_path=go_cloc_path,args=["--devops","GitHub","--organization",GITHUB_ORGANIZATION,"--accessToken",GITHUB_ACCESS_TOKEN,"--log-level","INFO","--dump-csvs=false"])
     )
     test_results.append(
-        run_test(name="AzureDevOps", expected=57888,go_cloc_path=go_cloc_path,args=["--devops","AzureDevOps","--organization",AZURE_DEVOPS_ORGANIZATION,"--accessToken",AZURE_DEVOPS_ACCESS_TOKEN,"--log-level","DEBUG","--dump-csvs=false"])
+        run_test(name="AzureDevOps", expected=57888,go_cloc_path=go_cloc_path,args=["--devops","AzureDevOps","--organization",AZURE_DEVOPS_ORGANIZATION,"--accessToken",AZURE_DEVOPS_ACCESS_TOKEN,"--log-level","INFO","--dump-csvs=false"])
     )
     test_results.append(
-        run_test(name="GitLab", expected=162,go_cloc_path=go_cloc_path,args=["--devops","GitLab","--organization",GITLAB_ORGANIZATION,"--accessToken",GITLAB_ACCESS_TOKEN,"--log-level","DEBUG","--dump-csvs=false"])
+        run_test(name="GitLab", expected=162,go_cloc_path=go_cloc_path,args=["--devops","GitLab","--organization",GITLAB_ORGANIZATION,"--accessToken",GITLAB_ACCESS_TOKEN,"--log-level","INFO","--dump-csvs=false"])
     )
     test_results.append(
-        run_test(name="Bitbucket", expected=4317,go_cloc_path=go_cloc_path,args=["--devops","Bitbucket","--organization",BITBUCKET_ORGANIZATION,"--accessToken",BITBUCKET_ACCESS_TOKEN,"--log-level","DEBUG","--dump-csvs=false"])
+        run_test(name="Bitbucket", expected=4317,go_cloc_path=go_cloc_path,args=["--devops","Bitbucket","--organization",BITBUCKET_ORGANIZATION,"--accessToken",BITBUCKET_ACCESS_TOKEN,"--log-level","INFO","--dump-csvs=false"])
     )
 
     did_all_pass = print_test_results(test_results)
