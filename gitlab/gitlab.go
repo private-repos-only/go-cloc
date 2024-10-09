@@ -21,8 +21,8 @@ func CreateDiscoverURLGitLab(accessToken string, organization string, pageNum in
 	return "https://" + accessToken + "@gitlab.com/api/v4/groups/" + organization + "/projects?per_page=" + strconv.Itoa(pageSize) + "&page=" + strconv.Itoa(pageNum)
 }
 
-func CreateZipURLGitLab(accessToken string, organization string, repoName string, defaultBranch string) string {
-	return "https://" + accessToken + "@gitlab.com/" + organization + "/" + repoName + "/-/archive/" + defaultBranch + "/" + repoName + "-" + defaultBranch + ".zip"
+func CreateZipURLGitLab(organization string, repoName string, defaultBranch string) string {
+	return "https://gitlab.com/" + organization + "/" + repoName + "/-/archive/" + defaultBranch + "/" + repoName + "-" + defaultBranch + ".zip"
 }
 
 // Define the nested struct types

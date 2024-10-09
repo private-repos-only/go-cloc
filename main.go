@@ -194,6 +194,9 @@ func CloneRepoUsingZip(mode string, accessToken string, repoInfo devops.RepoInfo
 	} else if mode == utilities.AZUREDEVOPS {
 		zipUrl := azuredevops.CreateZipURLAzureDevOps(repoInfo.OrganizationName, repoInfo.ProjectName, repoInfo.RepositoryName, repoInfo.DefaultBranch)
 		clonedRepoDir = clone.DonwloadAndUnzip(zipUrl, repoInfo.RepositoryName, accessToken)
+	} else if mode == utilities.GITLAB {
+		zipUrl := gitlab.CreateZipURLGitLab(repoInfo.OrganizationName, repoInfo.RepositoryName, repoInfo.DefaultBranch)
+		clonedRepoDir = clone.DonwloadAndUnzip(zipUrl, repoInfo.RepositoryName, accessToken)
 	} else {
 		logger.Error("Mode ", mode, " is not supported for cloning using zip")
 		logger.LogStackTraceAndExit(nil)
