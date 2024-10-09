@@ -24,7 +24,7 @@ jobs:
           python-version: '3.x'
 
       - name: Build Go project
-        run: go build -o go-cloc.exe ./...
+        run: go build -o go-cloc.exe ./main.go
 
       - name: Add binary to PATH
         run: echo "::add-path::$(pwd)"
@@ -49,7 +49,7 @@ jobs:
           python-version: '3.x'
 
       - name: Build Go project
-        run: go build -o go-cloc ./...
+        run: go build -o go-cloc ./main.go
 
       - name: Add binary to PATH
         run: echo "::add-path::$(pwd)"
@@ -74,7 +74,7 @@ jobs:
           python-version: '3.x'
 
       - name: Build Go project
-        run: go build -o go-cloc ./...
+        run: go build -o go-cloc ./main.go
 
       - name: Add binary to PATH
         run: echo "::add-path::$(pwd)"
