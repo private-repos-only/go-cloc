@@ -17,18 +17,16 @@ def execute_go_cloc(go_cloc_path, args):
     # Collect all command-line arguments passed to the script
     args = [go_cloc_path] + args
 
-     # Run the binary with the provided arguments and capture the output
-    try:
-        process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
-        last_line = ""
-        for line in process.stdout:
-            print(line, end='')  # Print each line to standard output
-            last_line = line.strip()  # Keep track of the last line
+    # Construct the command string
+    command = " ".join(args)
 
-        process.wait()
-        if process.returncode != 0:
-            print(f"Error: Process exited with code {process.returncode}")
-            sys.exit(process.returncode)
+    # Run the command and capture the output
+    try:
+        with os.popen(command) as process:
+            last_line = ""
+            for line in process:
+                print(line, end='')  # Print each line to standard output
+                last_line = line.strip()  # Keep track of the last line
 
         # Parse the desired value from the last line
         if last_line.isdigit():
@@ -37,9 +35,9 @@ def execute_go_cloc(go_cloc_path, args):
         else:
             print("Expected output not found in the last line")
             return None
-    except subprocess.CalledProcessError as e:
-        print(f"Error: {e.stderr}")
-        sys.exit(e.returncode)
+    except OSError as e:
+        print(f"Error executing {go_cloc_path}: {e}")
+        sys.exit(1)
     
     
 def run_test(name,go_cloc_path,args,expected):
