@@ -22,7 +22,7 @@ func CloneRepoAzureDevOps(url string, accessToken string, repoName string) strin
 
 	_, err := git.PlainClone(dir, false, &git.CloneOptions{
 		Auth: &http.BasicAuth{
-			Username: "cole.gannaway",
+			Username: "",
 			Password: accessToken,
 		},
 		URL: url,
