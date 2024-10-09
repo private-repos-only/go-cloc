@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"go-cloc/azuredevops"
 	"go-cloc/bitbucket"
 	"go-cloc/clone"
@@ -205,8 +206,8 @@ func main() {
 
 	logger.Info("Total LOC for ", args.Organization, " is ", totalLoc)
 
-	// return total LOC as exit code for external use
-	os.Exit(totalLoc)
+	// Print the total LOC to standard output to make it easy for external tools to parse
+	fmt.Println(totalLoc)
 }
 
 func CloneRepoUsingZip(mode string, accessToken string, repoInfo devops.RepoInfo) string {
