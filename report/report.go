@@ -64,6 +64,7 @@ func ConvertFileResultsIntoRecords(fileScanResultsArr []scanner.FileScanResults,
 	return records
 }
 
+// WriteCsv writes the records to a CSV file
 func WriteCsv(outputFilePath string, records [][]string) error {
 	// Write to csv
 	f, err := os.Create(outputFilePath)
@@ -85,6 +86,7 @@ func WriteCsv(outputFilePath string, records [][]string) error {
 	return nil
 }
 
+// PrintCsv prints the records to the console, useful for debugging
 func PrintCsv(records [][]string) {
 	for _, row := range records {
 		outputString := ""
@@ -94,7 +96,7 @@ func PrintCsv(records [][]string) {
 				outputString += ","
 			}
 		}
-		logger.Info(outputString)
+		logger.Debug(outputString)
 	}
 }
 

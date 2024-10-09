@@ -156,8 +156,6 @@ func main() {
 			report.PrintCsv(records)
 		}
 
-		logger.Info("Done scanning ", repoInfo.RepositoryName)
-
 		// clean up cloned repo after scan completes
 		if args.Mode == utilities.LOCAL {
 			// do not delete the directory if we are scanning a local file or directory
