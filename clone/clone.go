@@ -13,17 +13,22 @@ import (
 	"github.com/go-git/go-git/v5"
 )
 
-// UnzipAndRename extracts and renames the top-level directory in the zip file.
-func UnzipAndRename(src string, dest string, newFolderName string) error {
+// Unzip extracts the contents of the zip file to a folder with the same name as the zip file.
+func Unzip(zipFilePath string) error {
 	// Open the zip file
-	r, err := zip.OpenReader(src)
+	r, err := zip.OpenReader(zipFilePath)
 	if err != nil {
 		logger.Error("Error opening zip file: ", err)
 		return err
 	}
 	defer r.Close()
 
-	var baseDir string
+	// Create the destination directory based on the zip file name
+	dest := strings.TrimSuffix(zipFilePath, filepath.Ext(zipFilePath))
+	if err := os.MkdirAll(dest, os.ModePerm); err != nil {
+		logger.Error("Error creating destination directory: ", err)
+		return err
+	}
 
 	// Iterate through the files in the archive
 	for _, f := range r.File {
@@ -33,53 +38,53 @@ func UnzipAndRename(src string, dest string, newFolderName string) error {
 		// Normalize the path to use forward slashes
 		fpath = strings.ReplaceAll(fpath, "\\", "/")
 
-		// Identify the base directory (i.e., the top-level folder)
-		if baseDir == "" {
-			parts := strings.Split(fpath, "/")
-			baseDir = parts[0] // the first part is the top-level folder
+		// Strip the top-level directory
+		parts := strings.SplitN(fpath, "/", 2)
+		if len(parts) > 1 {
+			fpath = parts[1]
+		} else {
+			fpath = parts[0]
 		}
 
-		// Replace the base directory name with the user-provided new name
-		fpath = strings.Replace(fpath, baseDir, newFolderName, 1)
-
-		// Create the full destination path for the file
+		// Create the full path for the destination file
 		fpath = filepath.Join(dest, fpath)
 
-		// Check if the file is a directory, create it if necessary
 		if f.FileInfo().IsDir() {
-			os.MkdirAll(fpath, os.ModePerm)
-			continue
-		}
+			// Create directory
+			if err := os.MkdirAll(fpath, os.ModePerm); err != nil {
+				logger.Error("Error creating directory: ", err)
+				return err
+			}
+		} else {
+			// Create file
+			if err := os.MkdirAll(filepath.Dir(fpath), os.ModePerm); err != nil {
+				logger.Error("Error creating directory for file: ", err)
+				return err
+			}
 
-		// Create the file's directory if it doesn't exist
-		if err := os.MkdirAll(filepath.Dir(fpath), os.ModePerm); err != nil {
-			logger.Error("Error creating directory: ", err)
-			return err
-		}
+			outFile, err := os.OpenFile(fpath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
+			if err != nil {
+				logger.Error("Error opening file for writing: ", err)
+				return err
+			}
 
-		// Open the file for writing
-		outFile, err := os.OpenFile(fpath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
-		if err != nil {
-			logger.Error("Error opening file: ", err)
-			return err
-		}
-		defer outFile.Close()
+			rc, err := f.Open()
+			if err != nil {
+				logger.Error("Error opening file in zip: ", err)
+				return err
+			}
 
-		// Open the zip file entry for reading
-		rc, err := f.Open()
-		if err != nil {
-			logger.Error("Error opening zip file entry: ", err)
-			return err
-		}
-		defer rc.Close()
+			_, err = io.Copy(outFile, rc)
+			if err != nil {
+				logger.Error("Error copying file content: ", err)
+				return err
+			}
 
-		// Copy the file's contents to the output file
-		_, err = io.Copy(outFile, rc)
-		if err != nil {
-			logger.Error("Error copying file contents: ", err)
-			return err
+			outFile.Close()
+			rc.Close()
 		}
 	}
+
 	return nil
 }
 
@@ -109,7 +114,8 @@ func DonwloadAndUnzip(getUrl string, repoName string, accessToken string) string
 	}
 
 	// Check if the Content-Type is application/zip, if not, return
-	if resp.Header.Get("Content-Type") != "application/zip" {
+	contentType := resp.Header.Get("Content-Type")
+	if !strings.ContainsAny(contentType, "application/zip") || !strings.ContainsAny(contentType, "application/octet-stream") {
 		logger.Error("Unexpected Content-Type: ", resp.Header.Get("Content-Type"))
 		return ""
 	}
@@ -128,7 +134,7 @@ func DonwloadAndUnzip(getUrl string, repoName string, accessToken string) string
 	}
 
 	// unzip the file
-	err = UnzipAndRename(zipFilePath, "", repoName)
+	err = Unzip(zipFilePath)
 	if err != nil {
 		logger.Error("Error unzipping file: ", err)
 		logger.LogStackTraceAndExit(err)

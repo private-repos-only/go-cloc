@@ -20,7 +20,10 @@ type response struct {
 
 func CreateCloneURLAzureDevOps(accessToken string, organization string, projectName string, repoName string) string {
 	return "https://" + accessToken + "@dev.azure.com/" + organization + "/" + projectName + "/_git/" + repoName
+}
 
+func CreateZipURLAzureDevOps(organization string, projectName string, repoName string, defaultBranch string) string {
+	return "https://dev.azure.com/" + organization + "/" + projectName + "/_apis/git/repositories/" + repoName + "/items/items?path=/&versionDescriptor[versionOptions]=0&versionDescriptor[versionType]=0&versionDescriptor[version]=" + defaultBranch + "&resolveLfs=true&$format=zip&api-version=5.0&download=true"
 }
 
 func DiscoverReposAzureDevOps(organization string, accessToken string) []devops.RepoInfo {
