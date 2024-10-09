@@ -5,9 +5,22 @@ on:
     branches:
       - '**'
   workflow_dispatch:
+    inputs:
+      job:
+        description: 'Job to run'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - unit-tests
+          - windows
+          - linux
+          - macos
 
 jobs:
   build-and-test-unit-tests:
+    if: github.event.inputs.job == 'all' || github.event.inputs.job == 'unit-tests'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -27,6 +40,7 @@ jobs:
         run: go test ./...
 
   build-and-test-windows:
+    if: github.event.inputs.job == 'all' || github.event.inputs.job == 'windows'
     runs-on: windows-latest
     steps:
       - name: Checkout repository
@@ -58,6 +72,7 @@ jobs:
           GO_CLOC_BITBUCKET_ACCESS_TOKEN: ${{ secrets.GO_CLOC_BITBUCKET_ACCESS_TOKEN }}
 
   build-and-test-linux:
+    if: github.event.inputs.job == 'all' || github.event.inputs.job == 'linux'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -89,6 +104,7 @@ jobs:
           GO_CLOC_BITBUCKET_ACCESS_TOKEN: ${{ secrets.GO_CLOC_BITBUCKET_ACCESS_TOKEN }}
 
   build-and-test-macos:
+    if: github.event.inputs.job == 'all' || github.event.inputs.job == 'macos'
     runs-on: macos-latest
     steps:
       - name: Checkout repository
