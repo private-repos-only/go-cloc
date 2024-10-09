@@ -25,7 +25,7 @@ func CreateCloneURLGithub(accessToken string, organization string, repoName stri
 }
 
 func CreateZipURLGithub(organization string, repoName string, defaultBranch string) string {
-	return "https://api.github.com/repos/" + organization + "/" + repoName + "/zipball/" + defaultBranch
+	return "https://github.com/" + organization + "/" + repoName + "/archive/refs/heads/" + defaultBranch + ".zip"
 }
 
 func CreateGetDefaultBranchURLGitHub(organization string, repoName string) string {

@@ -94,13 +94,10 @@ func main() {
 			logger.Info((index + 1), "/", len(fitleredRepoInfoArr), " cloning respository ", repoInfo.RepositoryName, "...")
 
 			// TODO: add support for cloning using zip for more platforms
-			if args.CloneRepoUsingZip && args.Mode == utilities.GITHUB {
+			if args.CloneRepoUsingZip {
 				logger.Debug("Cloning using zip")
 
-				// clone repo
-				defaultBranch := github.DiscoverDefaultBranchForRepoGithub(repoInfo.OrganizationName, repoInfo.RepositoryName, args.AccessToken)
-				zipUrl := github.CreateZipURLGithub(repoInfo.OrganizationName, repoInfo.RepositoryName, defaultBranch)
-				clonedRepoDir = clone.DonwloadAndUnzip(zipUrl, repoInfo.RepositoryName, args.AccessToken)
+				clonedRepoDir = CloneRepoUsingZip(args.Mode, args.AccessToken, repoInfo)
 				if clonedRepoDir == "" {
 					// Failed to clone repo, save metadata for later reporting
 					failedRepos = append(failedRepos, repoInfo)
@@ -185,6 +182,20 @@ func main() {
 
 	// return total LOC as exit code for external use
 	os.Exit(totalLoc)
+}
+
+func CloneRepoUsingZip(mode string, accessToken string, repoInfo devops.RepoInfo) string {
+	clonedRepoDir := ""
+	if mode == utilities.GITHUB {
+		// clone repo
+		defaultBranch := github.DiscoverDefaultBranchForRepoGithub(repoInfo.OrganizationName, repoInfo.RepositoryName, accessToken)
+		zipUrl := github.CreateZipURLGithub(repoInfo.OrganizationName, repoInfo.RepositoryName, defaultBranch)
+		clonedRepoDir = clone.DonwloadAndUnzip(zipUrl, repoInfo.RepositoryName, accessToken)
+	} else {
+		logger.Error("Mode ", mode, " is not supported for cloning using zip")
+		logger.LogStackTraceAndExit(nil)
+	}
+	return clonedRepoDir
 }
 
 func CloneRepo(mode string, accessToken string, organization string, repoInfo devops.RepoInfo) string {

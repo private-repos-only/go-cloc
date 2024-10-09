@@ -18,6 +18,7 @@ func UnzipAndRename(src string, dest string, newFolderName string) error {
 	// Open the zip file
 	r, err := zip.OpenReader(src)
 	if err != nil {
+		logger.Error("Error opening zip file: ", err)
 		return err
 	}
 	defer r.Close()
@@ -52,12 +53,14 @@ func UnzipAndRename(src string, dest string, newFolderName string) error {
 
 		// Create the file's directory if it doesn't exist
 		if err := os.MkdirAll(filepath.Dir(fpath), os.ModePerm); err != nil {
+			logger.Error("Error creating directory: ", err)
 			return err
 		}
 
 		// Open the file for writing
 		outFile, err := os.OpenFile(fpath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
 		if err != nil {
+			logger.Error("Error opening file: ", err)
 			return err
 		}
 		defer outFile.Close()
@@ -65,6 +68,7 @@ func UnzipAndRename(src string, dest string, newFolderName string) error {
 		// Open the zip file entry for reading
 		rc, err := f.Open()
 		if err != nil {
+			logger.Error("Error opening zip file entry: ", err)
 			return err
 		}
 		defer rc.Close()
@@ -72,6 +76,7 @@ func UnzipAndRename(src string, dest string, newFolderName string) error {
 		// Copy the file's contents to the output file
 		_, err = io.Copy(outFile, rc)
 		if err != nil {
+			logger.Error("Error copying file contents: ", err)
 			return err
 		}
 	}
@@ -86,14 +91,26 @@ func DonwloadAndUnzip(getUrl string, repoName string, accessToken string) string
 	logger.Debug("Cloning using url: ", getUrl)
 
 	// Make API call
-	resp, err := http.Get(getUrl)
+	req, _ := http.NewRequest("GET", getUrl, nil)
+	req.Header.Set("Authorization", "Bearer "+accessToken)
+
+	// Perform the request using the default HTTP client
+	client := &http.Client{}
+	resp, err := client.Do(req)
 	if err != nil {
-		log.Fatalln(err)
+		logger.LogStackTraceAndExit(err)
 	}
+	defer resp.Body.Close()
 
 	// Check if the status code is 200
 	if resp.StatusCode != http.StatusOK {
 		logger.Error(resp.Status, " ", resp.StatusCode, " ", resp.Body)
+		return ""
+	}
+
+	// Check if the Content-Type is application/zip, if not, return
+	if resp.Header.Get("Content-Type") != "application/zip" {
+		logger.Error("Unexpected Content-Type: ", resp.Header.Get("Content-Type"))
 		return ""
 	}
 
@@ -111,7 +128,11 @@ func DonwloadAndUnzip(getUrl string, repoName string, accessToken string) string
 	}
 
 	// unzip the file
-	UnzipAndRename(zipFilePath, "", repoName)
+	err = UnzipAndRename(zipFilePath, "", repoName)
+	if err != nil {
+		logger.Error("Error unzipping file: ", err)
+		logger.LogStackTraceAndExit(err)
+	}
 	logger.Debug("File unzipped successfully!")
 
 	// remove the zip file

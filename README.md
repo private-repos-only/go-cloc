@@ -35,7 +35,7 @@ prompt> ./go-cloc --help
 -  `-accessToken`
        Your DevOps personal access token used for discovering and downloading repositories in your organization
 -  `-clone-repo-using-zip`
-       (Optional) Flag to clone repositories using zip files instead of git clone for faster downloads. Default is false. For Github, a fine-grained token is required for private repositories
+       (Optional) Flag to clone repositories using zip files instead of git clone for faster downloads. Default is false.
 -  `-devops`
        flag : <GitHub>||<AzureDevOps>||<Bitbucket>||<GitLab>||<File> (default "Local")
 -  `-dump-csvs`
@@ -110,8 +110,7 @@ Personal Access Tokens (PATs) are used to authenticate and authorize access to y
 ### GitHub
 1. Navigate to [GitHub Settings](https://github.com/settings/tokens).
 2. Click on **Generate new token**.
-3. For better security, it is recommended to use fine-grained access tokens. Under **Repository access**, select **All repositories** and under **Permissions**, set **Contents** to **Read-only**.
-4. Select the scopes or permissions you'd like to grant this token. For repository access, select `repo`.
+3. Under **Select Scopes**, select **repo**.
 5. Click **Generate token** and copy the token for use.
 
 ### Azure DevOps
