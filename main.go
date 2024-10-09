@@ -124,21 +124,38 @@ func main() {
 		// scan LOC for the directory
 		logger.Info("Scanning ", clonedRepoDir, "...")
 		filePaths := scanner.WalkDirectory(clonedRepoDir, args.IgnorePatterns)
-		resultsArr := []scanner.FileScanResults{}
+		fileScanResultsArr := []scanner.FileScanResults{}
 		for _, filePath := range filePaths {
-			resultsArr = append(resultsArr, scanner.ScanFile(filePath))
+			fileScanResultsArr = append(fileScanResultsArr, scanner.ScanFile(filePath))
 		}
+
+		logger.Debug("Calculating total LOC for ", repoInfo.RepositoryName)
+
+		// sort and calculate total LOC
+		fileScanResultsArr = report.SortFileScanResults(fileScanResultsArr)
+		repoTotalResult := report.CalculateTotalLineOfCode(fileScanResultsArr)
+
+		logger.Info("Total LOC for ", repoInfo.RepositoryName, " is ", repoTotalResult.CodeLineCount)
+
+		// append results to allRepoResults
+		allRepoResults = append(allRepoResults, report.RepoTotal{RepositoryId: repoInfo.Id, CodeLineCount: repoTotalResult.CodeLineCount})
+
+		// convert results into records for CSV or command line output
+		records := report.ConvertFileResultsIntoRecords(fileScanResultsArr, repoTotalResult)
 
 		// Dump results by file in a csv
 		if args.DumpCSVs {
 			outputCsvFilePath := filepath.Join(args.ResultsDirectoryPath, repoInfo.Id+".csv")
-			logger.Debug("Dumping results to ", outputCsvFilePath)
-			codeLineCount := report.OutputCSV(resultsArr, outputCsvFilePath)
-			allRepoResults = append(allRepoResults, report.RepoTotal{RepositoryName: repoInfo.RepositoryName, Total: codeLineCount})
-
-			// TODO error checking
+			logger.Debug("Dumping results by file to ", outputCsvFilePath)
+			report.WriteCsv(outputCsvFilePath, records)
 			logger.Info("Done! Results for ", repoInfo.RepositoryName, " can be found ", outputCsvFilePath)
+		} else {
+			// print results to the command line
+			logger.Info("Results by file for ", repoInfo.RepositoryName, ":")
+			report.PrintCsv(records)
 		}
+
+		logger.Info("Done scanning ", repoInfo.RepositoryName)
 
 		// clean up cloned repo after scan completes
 		if args.Mode == utilities.LOCAL {
@@ -164,18 +181,26 @@ func main() {
 		logger.Info("0 repos failed to scan.")
 	}
 
+	allRepoResults = report.SortRepoTotalResults(allRepoResults)
+
+	logger.Debug("Calculating total LOC for ", args.Organization)
 	// sum total LOC for all repos
 	totalLoc := 0
 	for _, repoResult := range allRepoResults {
-		totalLoc += repoResult.Total
+		totalLoc += repoResult.CodeLineCount
 	}
+
+	// convert results into records for CSV or command line output
+	records := report.ConvertRepoTotalsIntoRecords(allRepoResults)
 
 	// dump combined csv reports
 	if args.DumpCSVs {
-		logger.Debug("Combining results...")
 		combinedReportsCSVFilePath := filepath.Join(args.ResultsDirectoryPath, "AAA-combined-total-lines.csv")
-		totalLoc = report.OutputCombinedCSV(allRepoResults, combinedReportsCSVFilePath)
+		logger.Debug("Dumping total results by file to ", combinedReportsCSVFilePath)
+		report.WriteCsv(combinedReportsCSVFilePath, records)
 		logger.Info("Total LOC results can be found ", combinedReportsCSVFilePath)
+	} else {
+		report.PrintCsv(records)
 	}
 
 	logger.Info("Total LOC for ", args.Organization, " is ", totalLoc)

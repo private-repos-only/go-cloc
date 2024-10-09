@@ -4,7 +4,6 @@ import (
 	"archive/zip"
 	"go-cloc/logger"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -123,26 +122,29 @@ func DonwloadAndUnzip(getUrl string, repoName string, accessToken string) string
 	// Read the response body
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatalln(err)
+		logger.LogStackTraceAndExit(err)
 	}
 
 	// Save the file to a local zip file
 	zipFilePath := repoName + ".zip"
 	err = os.WriteFile(zipFilePath, body, 0644)
 	if err != nil {
-		log.Fatalln(err)
+		logger.LogStackTraceAndExit(err)
 	}
 
 	// unzip the file
 	err = Unzip(zipFilePath)
+
+	// remove the zip file regardless of the result
+	os.Remove(zipFilePath)
+
+	// Check if there was an error unzipping the file
 	if err != nil {
 		logger.Error("Error unzipping file: ", err)
-		logger.LogStackTraceAndExit(err)
+		return ""
+	} else {
+		logger.Debug("File unzipped successfully!")
 	}
-	logger.Debug("File unzipped successfully!")
-
-	// remove the zip file
-	os.Remove(zipFilePath)
 
 	// return the resulting directory
 	return repoName
