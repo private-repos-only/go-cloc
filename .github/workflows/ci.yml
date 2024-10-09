@@ -1,0 +1,83 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - '**'
+  workflow_dispatch:
+
+jobs:
+  build-and-test-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: '1.23.1'
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: Build Go project
+        run: go build -o go-cloc.exe ./...
+
+      - name: Add binary to PATH
+        run: echo "::add-path::$(pwd)"
+
+      - name: Run integration tests
+        run: python integration-tests.py ./go-cloc.exe
+
+  build-and-test-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: '1.23.1'
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: Build Go project
+        run: go build -o go-cloc ./...
+
+      - name: Add binary to PATH
+        run: echo "::add-path::$(pwd)"
+
+      - name: Run integration tests
+        run: python3 integration-tests.py ./go-cloc
+
+  build-and-test-macos:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: '1.23.1'
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: Build Go project
+        run: go build -o go-cloc ./...
+
+      - name: Add binary to PATH
+        run: echo "::add-path::$(pwd)"
+
+      - name: Run integration tests
+        run: python3 integration-tests.py ./go-cloc
