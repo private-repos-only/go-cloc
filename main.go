@@ -197,6 +197,10 @@ func CloneRepoUsingZip(mode string, accessToken string, repoInfo devops.RepoInfo
 	} else if mode == utilities.GITLAB {
 		zipUrl := gitlab.CreateZipURLGitLab(repoInfo.OrganizationName, repoInfo.RepositoryName, repoInfo.DefaultBranch)
 		clonedRepoDir = clone.DonwloadAndUnzip(zipUrl, repoInfo.RepositoryName, accessToken)
+	} else if mode == utilities.BITBUCKET {
+		logger.Warn("Cloning using zip is not tested for Bitbucket yet. It may not work as expected.")
+		zipUrl := bitbucket.CreateZipURLBitbucket(accessToken, repoInfo.OrganizationName, repoInfo.RepositoryName, repoInfo.DefaultBranch)
+		clonedRepoDir = clone.DonwloadAndUnzip(zipUrl, repoInfo.RepositoryName, accessToken)
 	} else {
 		logger.Error("Mode ", mode, " is not supported for cloning using zip")
 		logger.LogStackTraceAndExit(nil)

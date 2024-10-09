@@ -30,6 +30,11 @@ func CreateCloneURLBitbucket(accessToken string, organization string, respositor
 	return "https://x-token-auth:" + accessToken + "@bitbucket.org/" + organization + "/" + respository + ".git"
 }
 
+func CreateZipURLBitbucket(accessToken string, organization string, repoName string, defaultBranch string) string {
+	logger.Warn("Assuming git repository since using HEAD.zip for the commit")
+	return "https://bitbucket.org/" + organization + "/" + repoName + "/get/HEAD.zip"
+}
+
 func CreateDiscoverURLBitbucket(organization string, pageNum int, pageSize int) string {
 	return "https://api.bitbucket.org/2.0/repositories/" + organization + "?pagelen=" + strconv.Itoa(pageSize) + "&page=" + strconv.Itoa(pageNum)
 }
